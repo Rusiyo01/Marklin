@@ -1,0 +1,4 @@
+firmware/.pio/
+firmware/test_host/build/
+.vscode/
+*.o
