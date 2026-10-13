@@ -1,0 +1,24 @@
+MÄRKLIN ESP32 - INSTALADOR SIN CONEXIÓN
+=======================================
+
+1. Conecta el ESP32 al ordenador con un cable USB de datos.
+   Windows: si no lo reconoce, instala el controlador CP210x o CH340 de tu placa.
+
+2. Ejecuta el instalador:
+   - Windows: doble clic en  instalar-windows.bat
+   - macOS:   doble clic en  instalar-mac.command
+              (si macOS lo bloquea: clic derecho > Abrir)
+   - Linux:   en una terminal,  sh instalar-linux.sh
+
+3. Al terminar, conéctate con el móvil a la red WiFi "Marklin-ESP32"
+   (contraseña marklin123). La aplicación se abre sola; si no, abre
+   http://192.168.4.1 y sigue el asistente.
+
+Antes de conectar el ESP32 a la Gleisbox lee la guía de montaje:
+https://github.com/Rusiyo01/Marklin/blob/HEAD/docs/hardware.md
+
+Contenido:
+  firmware/marklin-esp32.bin    ESP32 (WROOM-32, DevKitC...)
+  firmware/marklin-esp32s3.bin  ESP32-S3
+  firmware/marklin-esp32c3.bin  ESP32-C3
+  esptool/                      herramienta oficial de Espressif para grabar

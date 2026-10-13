@@ -1,5 +1,6 @@
 #include "app.h"
 
+#include <DNSServer.h>
 #include <ESPmDNS.h>
 #include <LittleFS.h>
 #include <WiFi.h>
@@ -9,6 +10,7 @@
 
 #include "console.h"
 #include "event_log.h"
+#include "layout_store.h"
 #include "script_store.h"
 #include "web_ui.h"
 
@@ -65,6 +67,19 @@ class EspHost : public automation::Host {
         *id = s.id;
         return true;
       }
+    for (const auto& s : layouts::sensors())
+      if (!s.name.empty() && s.name == name) {
+        *id = s.id;
+        return true;
+      }
+    return false;
+  }
+  bool resolveAccessory(const std::string& name, uint32_t* uid) override {
+    for (const auto& a : layouts::accessories())
+      if (a.name == name) {
+        *uid = a.uid;
+        return true;
+      }
     return false;
   }
 };
@@ -85,6 +100,9 @@ std::vector<LocalSensor> localSensors;
 bool estopRaw = false;
 bool estopStable = false;
 uint32_t estopSinceMs = 0;
+
+DNSServer dnsServer;
+bool captivePortal = false;
 
 uint32_t bootMs = 0;
 bool gleisboxDone = false;
@@ -163,6 +181,9 @@ void setupWifi() {
                 config.apPassword.empty() ? nullptr : config.apPassword.c_str());
     eventLog.addf(LogKind::Info, "WiFi: punto de acceso '%s', IP %s", config.apSsid.c_str(),
                   WiFi.softAPIP().toString().c_str());
+    // Portal cautivo: cualquier dirección lleva a la interfaz (el móvil la
+    // abre solo al conectarse a la red del ESP32).
+    captivePortal = dnsServer.start(53, "*", WiFi.softAPIP());
   }
   WiFi.setSleep(false);
   if (MDNS.begin(config.hostname.c_str())) {
@@ -234,9 +255,18 @@ String locoLabel(uint32_t uid) {
 
 String sensorName(uint32_t id) {
   for (const auto& s : config.sensors)
+    if (s.id == id && !s.name.empty()) return s.name.c_str();
+  for (const auto& s : layouts::sensors())
     if (s.id == id) return s.name.c_str();
   return "";
 }
+
+void activateLayout(const std::string& name) {
+  layouts::loadActive(name);
+  for (const auto& s : layouts::sensors()) controller.declareSensor(s.id);
+}
+
+bool isCaptivePortal() { return captivePortal; }
 
 void scheduleRestart(uint32_t delayMs) {
   restartAtMs = millis() + delayMs;
@@ -252,6 +282,7 @@ void appSetup() {
   String err;
   if (!loadConfig(&config, &err)) eventLog.addf(LogKind::Info, "config: %s", err.c_str());
   scripts::installDefaults();
+  layouts::installDefaults();
 
   // UID propio derivado de la MAC (único para cada placa).
   const uint64_t mac = ESP.getEfuseMac();
@@ -266,6 +297,7 @@ void appSetup() {
     eventLog.add(LogKind::Error, "CAN: no se pudo iniciar el controlador TWAI");
 
   setupLocalSensors();
+  activateLayout(config.layout);
   if (config.estopPin >= 0) pinMode(config.estopPin, INPUT_PULLUP);
 
   setupWifi();
@@ -286,6 +318,7 @@ void appLoop() {
   pollEstop(now);
   bootSequence(now);
   engine.tick();
+  if (captivePortal) dnsServer.processNextRequest();
   webLoop();
   consoleLoop();
   if (restartAtMs && static_cast<int32_t>(now - restartAtMs) >= 0) ESP.restart();

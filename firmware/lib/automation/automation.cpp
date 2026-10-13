@@ -379,8 +379,8 @@ Program compile(const std::string& source, Host* host) {
                kw == "senal") {
       in.op = Op::Switch;
       if (need(2, "switch <direccion> straight|round|yellow|white")) {
-        if (!parseAccessoryRef(t[1], &in.a))
-          fail("direccion de accesorio no valida: '" + t[1] + "' (ej. 5, mm:5, dcc:12)");
+        if (!parseAccessoryRef(t[1], &in.a) && !(host && host->resolveAccessory(t[1], &in.a)))
+          fail("desvio desconocido: '" + t[1] + "' (ej. 5, mm:5, dcc:12 o un nombre de la maqueta)");
         else if (!parsePosition(t[2], &in.b))
           fail("posicion no valida: '" + t[2] + "' (straight/recto, round/desviado, yellow, white)");
       }

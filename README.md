@@ -14,6 +14,19 @@ además de manejarlas desde el móvil o el PC.
                         └── sensores (reed, IR, vías de contacto)
 ```
 
+## Instalación en 3 pasos
+
+1. **Instala** el firmware desde el navegador (Chrome/Edge) en
+   **https://rusiyo01.github.io/Marklin/** — o con el instalador sin conexión
+   para Windows, Mac o Linux. Todo viene preconfigurado.
+2. **Conéctate** con el móvil a la WiFi **`Marklin-ESP32`** (contraseña
+   `marklin123`): la aplicación se abre sola.
+3. **Sigue el asistente**: comprueba la Gleisbox, recoge tus locos, elige o
+   sube tu maqueta de **C-Track Planner** y tu WiFi.
+
+Detalles en [docs/instalacion.md](docs/instalacion.md). Antes de conectar
+el ESP32 a la Gleisbox, lee la [guía de montaje](docs/hardware.md).
+
 ## Qué hace
 
 - **Habla el protocolo CAN de Märklin** (el mismo de la MS2/CS2/CS3): corriente
@@ -25,9 +38,15 @@ además de manejarlas desde el móvil o el PC.
 - **Automatización con scripts**: esperas, sensores con *timeout*, rampas de
   aceleración, bucles, saltos condicionales y al azar, y **hasta 4 trenes a
   la vez** que se coordinan reservando tramos de vía (`lock`/`unlock`).
-- **Interfaz web** (sin Internet, desde el punto de acceso del ESP32): mandos
+- **Aplicación web** (sin Internet, desde el punto de acceso del ESP32, que se
+  abre sola al conectarse y se puede añadir a la pantalla de inicio): mandos
   de locos, editor de scripts con comprobación de errores, sensores (con
-  simulación para probar sin trenes), desvíos, monitor CAN y ajustes.
+  simulación para probar sin trenes), desvíos, monitor CAN, ajustes y un
+  asistente de primera configuración.
+- **Maquetas de C-Track Planner**: sube tu plano (.json o la app .html) y
+  úsalo como cuadro de mando: desvíos con un toque, sensores en directo y
+  nombres de desvíos/sensores en los scripts. Trae 3 maquetas de ejemplo ya
+  configuradas.
 - **Sensores**: en GPIO del ESP32 (reed, Hall, infrarrojos, vías de contacto
   con optoacoplador) o por CAN (Link S88).
 - **Seguridad**: parada de emergencia (botón BOOT, web, consola), los scripts
@@ -81,8 +100,9 @@ goto inicio
    > patillajes publicados se contradicen: **identifica las patillas con un
    > multímetro** antes de conectar (explicado en la guía).
 
-2. **Grabar el firmware** con [PlatformIO](https://platformio.org/)
-   (extensión de VS Code o línea de órdenes):
+2. **Grabar el firmware**: lo más fácil es la [página de instalación](https://rusiyo01.github.io/Marklin/)
+   (ver [docs/instalacion.md](docs/instalacion.md)). Para compilarlo tú, con
+   [PlatformIO](https://platformio.org/) (extensión de VS Code o línea de órdenes):
 
    ```sh
    cd firmware
@@ -106,8 +126,8 @@ goto inicio
    </details>
 
 3. **Conectarse**: busca la red WiFi **`Marklin-ESP32`** (contraseña
-   `marklin123`) y abre **http://192.168.4.1/**. Para que se una a tu WiFi,
-   cambia la configuración en *Ajustes* ([docs/configuracion.md](docs/configuracion.md)).
+   `marklin123`); la aplicación se abre sola (si no, **http://192.168.4.1/**)
+   y arranca el asistente de configuración.
 
 4. **Comprobar el bus**: en *Ajustes* → *Buscar equipos* deben aparecer la
    Gleisbox (y la MS2 si está conectada). Mueve una loco con la MS2: debe
@@ -121,6 +141,8 @@ goto inicio
 
 | Documento | Contenido |
 |---|---|
+| [docs/instalacion.md](docs/instalacion.md) | Instalación desde el navegador o sin conexión, asistente, actualizar y publicar versiones. |
+| [docs/maquetas.md](docs/maquetas.md) | Subir maquetas de C-Track Planner, asignar desvíos y sensores, ejemplos incluidos. |
 | [docs/investigacion.md](docs/investigacion.md) | Cómo funciona MS2 + Gleisbox, el protocolo CAN de Märklin, direcciones, arranque de la Gleisbox y fuentes. |
 | [docs/hardware.md](docs/hardware.md) | Material, cómo llegar al bus CAN, identificar patillas, conexionado, terminación, alimentación, sensores y emergencia. |
 | [docs/scripts.md](docs/scripts.md) | Referencia completa del lenguaje de scripts y ejemplos. |
@@ -134,10 +156,14 @@ firmware/
   platformio.ini          placas: esp32dev, esp32-s3, esp32-c3
   lib/marklin/            protocolo CAN de Märklin + controlador (portable)
   lib/automation/         lenguaje de scripts y motor de ejecución (portable)
-  src/                    firmware del ESP32: TWAI, web, API, consola, sensores
-  test_host/              tests en el PC (make -C firmware/test_host)
+  src/                    firmware del ESP32: TWAI, web, API, consola, sensores, maquetas
+  web/                    fuentes de la aplicación web (se empaqueta con tools/build_web.py)
+  layouts/                maquetas de ejemplo (generadas con tools/make_layouts.js)
+  tools/                  empaquetado de la web y del instalador
+  test_host/              tests en el PC (make -C firmware/test_host; node test_layouts.js)
+installer/                página de instalación web y scripts del instalador sin conexión
 docs/                     documentación
-.github/workflows/ci.yml  tests + compilación de las tres placas
+.github/workflows/ci.yml  tests, compilación de las tres placas, instalador, Pages y releases
 ```
 
 La lógica del protocolo y de los scripts no depende de Arduino y se prueba
@@ -147,8 +173,9 @@ las tramas exactas que usan can2udp/Railuino para la Gleisbox).
 ## Estado y limitaciones
 
 - ✅ Compila para ESP32, ESP32-S3 y ESP32-C3 (PlatformIO, Arduino-ESP32 2.0.17);
-  tests del protocolo y de los scripts pasan; interfaz web probada en
-  navegador contra una API simulada.
+  tests del protocolo, de los scripts y de las maquetas pasan; la aplicación
+  web (asistente, maquetas) está probada en navegador contra una API
+  simulada, y la importación con ficheros exportados por C-Track Planner.
 - ⚠️ **Aún no probado con una Gleisbox real.** El protocolo está contrastado
   con proyectos que sí funcionan con Gleisbox (Railuino, can2udp), pero haz
   las primeras pruebas con cuidado: un tramo recto, velocidad baja y la mano

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instalar Märklin ESP32</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<script type="module" src="https://unpkg.com/esp-web-tools@10.1.1/dist/web/install-button.js?module"></script>
+<style>
+:root{--bg:#14161a;--panel:#1e2228;--line:#2e343d;--text:#e6e8eb;--dim:#9aa3ad;--acc:#f0b429;--ok:#3fb950;--bad:#f85149;--blue:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+header{display:flex;gap:14px;align-items:center;margin-bottom:8px}
+header img{width:56px;height:56px}
+h1{font-size:28px;margin:0;color:var(--acc)}
+h2{font-size:19px;margin:28px 0 10px}
+.ver{color:var(--dim);font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin:14px 0}
+ol{padding-left:22px;margin:0}li{margin:6px 0}
+.big{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+esp-web-install-button button,.btn{background:var(--acc);color:#000;border:0;border-radius:9px;padding:13px 22px;font:700 17px system-ui,sans-serif;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.sec{background:var(--line);color:var(--text);font-weight:600;font-size:15px;padding:10px 16px}
+.warn{border-color:#6e4b13;background:#2a2114}
+.dim{color:var(--dim);font-size:14px}
+code{background:#0e1013;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:14px}
+a{color:var(--blue)}
+.os{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <img src="icon.svg" alt="">
+  <div><h1>Märklin ESP32</h1><div class="ver">Control automático de trenes Märklin · versión <b id="ver">__VERSION__</b></div></div>
+</header>
+<p>Convierte un ESP32 en el cerebro de tu maqueta: se conecta al bus CAN de la Gleisbox de la Mobile Station 2 y
+mueve tus trenes de forma automática. Se instala desde aquí en un minuto, ya preconfigurado: red WiFi propia,
+scripts y maquetas de ejemplo y un asistente que te guía la primera vez.</p>
+
+<div class="card">
+  <h2 style="margin-top:0">1. Instalar en el ESP32</h2>
+  <ol>
+    <li>Conecta el ESP32 al ordenador con un cable USB <b>de datos</b>.</li>
+    <li>Pulsa el botón y elige el puerto del ESP32 (suele llamarse <i>CP210x</i>, <i>CH340</i> o <i>USB JTAG</i>).</li>
+    <li>Elige <b>Instalar</b>. Tarda un minuto. Si te pregunta, la primera vez acepta <i>borrar el dispositivo</i>.</li>
+  </ol>
+  <p class="big" style="margin-top:16px">
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate">Instalar Märklin ESP32</button>
+      <span slot="unsupported" class="dim">Tu navegador no puede instalar desde la web. Usa <b>Chrome</b> o <b>Edge</b> en un
+        ordenador (Windows, Mac o Linux), o descarga el instalador sin conexión de abajo.</span>
+      <span slot="not-allowed" class="dim">Abre esta página con https:// para poder instalar.</span>
+    </esp-web-install-button>
+  </p>
+  <p class="dim">Funciona con ESP32, ESP32-S3 y ESP32-C3: detecta el modelo solo. Si no aparece ningún puerto,
+  instala el controlador USB de tu placa (<a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers">CP210x</a> o
+  <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html">CH340</a>) y, si hace falta, mantén pulsado el botón BOOT al empezar.</p>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">2. Primera puesta en marcha</h2>
+  <ol>
+    <li>Con el móvil, conéctate a la red WiFi <b>Marklin-ESP32</b> (contraseña <code>marklin123</code>).
+      La aplicación se abre sola; si no, abre <b>http://192.168.4.1</b>.</li>
+    <li>Sigue el <b>asistente</b>: comprueba la conexión con la Gleisbox, recoge tus locos, elige tu maqueta y tu WiFi.</li>
+    <li>Para tenerla como una app más: en el menú del navegador elige <b>Añadir a pantalla de inicio</b>.</li>
+  </ol>
+  <p class="dim">Puedes subir tus maquetas de <b>C-Track Planner</b> (archivo .json o la app sin conexión .html) desde la
+  pestaña <i>Maqueta</i>; allí asignas a cada desvío su dirección y a cada pieza su sensor.</p>
+</div>
+
+<div class="card warn">
+  <b>Antes de conectar el ESP32 a la Gleisbox</b>, lee la
+  <a href="https://github.com/Rusiyo01/Marklin/blob/HEAD/docs/hardware.md">guía de montaje</a>: el conector lleva también
+  ~18 V para la MS2 y hay que identificar las patillas CAN-H, CAN-L y GND con un multímetro.
+</div>
+
+<h2>Instalador sin conexión</h2>
+<p class="dim">Si no puedes usar Chrome/Edge: descarga el paquete de tu sistema, descomprímelo, conecta el ESP32 y abre el instalador.</p>
+<div class="os">
+  <a class="btn sec" href="https://github.com/Rusiyo01/Marklin/releases/latest/download/marklin-instalador-windows.zip">Windows (.zip)</a>
+  <a class="btn sec" href="https://github.com/Rusiyo01/Marklin/releases/latest/download/marklin-instalador-mac.zip">macOS (.zip)</a>
+  <a class="btn sec" href="https://github.com/Rusiyo01/Marklin/releases/latest/download/marklin-instalador-linux.zip">Linux (.zip)</a>
+</div>
+
+<h2>Más información</h2>
+<p class="dim"><a href="https://github.com/Rusiyo01/Marklin">Código fuente y documentación</a> ·
+<a href="https://github.com/Rusiyo01/Marklin/blob/HEAD/docs/instalacion.md">Guía de instalación</a> ·
+<a href="https://github.com/Rusiyo01/Marklin/blob/HEAD/docs/scripts.md">Lenguaje de scripts</a> ·
+<a href="https://github.com/Rusiyo01/Marklin/blob/HEAD/docs/maquetas.md">Maquetas de C-Track Planner</a></p>
+<p class="dim">Proyecto no oficial, sin relación con Gebr. Märklin &amp; Cie. GmbH.</p>
+</main>
+</body>
+</html>

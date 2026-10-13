@@ -48,8 +48,8 @@ goto inicio
 | Qué | Cómo se escribe | Ejemplos |
 |---|---|---|
 | Loco | alias definido con `loco`, nombre de la configuración, o protocolo:dirección | `tren`, `mm2:24`, `dcc:3`, `mfx:5` |
-| Sensor | alias definido con `sensor`, nombre de la configuración, o número | `anden`, `3`, `2005` |
-| Accesorio | número (MM) o protocolo:dirección | `5`, `mm:5`, `dcc:12` |
+| Sensor | alias definido con `sensor`, nombre de la configuración o de la maqueta activa, o número | `anden`, `3`, `2005` |
+| Accesorio | número (MM), protocolo:dirección o nombre de la maqueta activa | `5`, `mm:5`, `dcc:12`, `entrada` |
 | Velocidad | 0–1000 o porcentaje | `400`, `40%` |
 | Duración | número + unidad (`ms`, `s`, `m`, `h`); sin unidad = segundos | `500ms`, `2s`, `1.5s`, `2m`, `3` |
 | Estado de sensor | `on` / `off` (también `1`/`0`, `ocupado`/`libre`) | |

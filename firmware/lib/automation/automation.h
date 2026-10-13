@@ -58,6 +58,11 @@ class Host {
     (void)name; (void)id;
     return false;
   }
+  // Nombres de desvíos/señales (p.ej. los de la maqueta activa).
+  virtual bool resolveAccessory(const std::string& name, uint32_t* uid) {
+    (void)name; (void)uid;
+    return false;
+  }
 };
 
 enum class Op : uint8_t {

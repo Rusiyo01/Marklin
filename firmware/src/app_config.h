@@ -46,6 +46,9 @@ struct AppConfig {
   std::vector<LocoConfig> locos;
   std::vector<SensorConfig> sensors;
   std::vector<std::string> autostart;  // scripts que arrancan solos
+
+  std::string layout;      // maqueta activa (de C-Track Planner), "" = ninguna
+  bool setupDone = false;  // el asistente de primera configuración ya se completó
 };
 
 // Carga /config.json. Si no existe o es inválido, deja los valores por
@@ -60,3 +63,5 @@ String configToJson(const AppConfig& cfg);
 
 // Guarda el texto JSON (validado antes con parseConfig).
 bool saveConfigJson(const String& json);
+// Guarda la configuración en memoria (sin reiniciar).
+bool saveConfig(const AppConfig& cfg);

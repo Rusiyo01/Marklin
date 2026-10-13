@@ -36,3 +36,10 @@ String sensorName(uint32_t id);
 
 // Reinicia el ESP32 dentro de `delayMs` (para responder antes a la web).
 void scheduleRestart(uint32_t delayMs);
+
+// Activa una maqueta ("" = ninguna): sus nombres de desvíos y sensores
+// pasan a poder usarse en los scripts.
+void activateLayout(const std::string& name);
+
+// true si el ESP32 tiene su propia red WiFi con portal cautivo.
+bool isCaptivePortal();

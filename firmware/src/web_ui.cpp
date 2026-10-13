@@ -4,10 +4,14 @@
 #include <WebServer.h>
 #include <WiFi.h>
 
+#include <algorithm>
+
 #include "app.h"
 #include "event_log.h"
+#include "layout_store.h"
 #include "script_store.h"
-#include "web_page.h"
+#include "version.h"
+#include "web_assets.h"
 
 namespace {
 
@@ -58,6 +62,9 @@ const char* powerName(marklin::PowerState p) {
 
 void handleState() {
   JsonDocument doc;
+  doc["version"] = FW_VERSION;
+  doc["setupDone"] = config.setupDone;
+  doc["layout"] = config.layout;
   doc["power"] = powerName(controller.power());
   doc["overload"] = controller.overload();
   doc["uptime"] = millis() / 1000;
@@ -140,6 +147,7 @@ void handleState() {
   JsonObject wifi = doc["wifi"].to<JsonObject>();
   const bool sta = WiFi.getMode() == WIFI_STA;
   wifi["mode"] = sta ? "sta" : "ap";
+  wifi["apSsid"] = config.apSsid;
   wifi["ip"] = sta ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
   if (sta) wifi["rssi"] = WiFi.RSSI();
   doc["heap"] = ESP.getFreeHeap();
@@ -331,10 +339,160 @@ void handleRestart() {
   scheduleRestart(500);
 }
 
+// Guarda (o borra, con name vacío) el nombre de una loco en la configuración.
+void handleLocoName() {
+  uint32_t uid;
+  if (!argLoco(&uid)) return sendError("loco no valida");
+  String name = server.arg("name");
+  name.trim();
+  name.toLowerCase();
+  const std::string n = name.c_str();
+  auto it = std::find_if(config.locos.begin(), config.locos.end(),
+                         [&](const LocoConfig& l) { return l.uid == uid; });
+  if (n.empty()) {
+    if (it != config.locos.end()) config.locos.erase(it);
+  } else {
+    if (!layouts::validName(name) || !(n[0] >= 'a' && n[0] <= 'z'))
+      return sendError("nombre no valido: empieza por una letra; solo minusculas, numeros, _ y -");
+    for (const auto& l : config.locos)
+      if (l.name == n && l.uid != uid) return sendError("ya hay otra loco con ese nombre");
+    if (it != config.locos.end()) {
+      it->name = n;
+    } else {
+      LocoConfig lc;
+      lc.name = n;
+      lc.uid = uid;
+      config.locos.push_back(lc);
+    }
+  }
+  if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+  controller.setLocoName(uid, n.c_str());
+  sendOk(n.empty() ? String("nombre borrado") : String("guardada como '") + name + "'");
+}
+
+// Asistente de primera configuración.
+//   {"locos":[{"name":"x","loco":"mm2:24"}], "layout":"estacion",
+//    "wifi":{"mode":"sta","ssid":"...","password":"..."}}
+void handleSetup() {
+  JsonDocument in;
+  if (deserializeJson(in, body())) return sendError("datos no validos");
+  JsonDocument cfg;
+  deserializeJson(cfg, configToJson(config));
+  if (in["locos"].is<JsonArrayConst>()) cfg["locos"] = in["locos"];
+  if (in["layout"].is<const char*>()) cfg["layout"] = in["layout"];
+  JsonVariantConst w = in["wifi"];
+  if (w["mode"].is<const char*>()) {
+    cfg["wifi"]["mode"] = w["mode"];
+    cfg["wifi"]["ssid"] = w["ssid"] | "";
+    cfg["wifi"]["password"] = w["password"] | "";
+  }
+  cfg["setupDone"] = true;
+  String json;
+  serializeJsonPretty(cfg, json);
+  AppConfig parsed;
+  String err;
+  if (!parseConfig(json, &parsed, &err)) return sendError(err);
+  if (!parsed.layout.empty() && !layouts::exists(parsed.layout.c_str()))
+    return sendError("la maqueta elegida no existe");
+  const bool wifiChanged = parsed.wifiMode != config.wifiMode || parsed.staSsid != config.staSsid ||
+                           parsed.staPassword != config.staPassword;
+  if (!saveConfigJson(json)) return sendError("no se pudo guardar", 500);
+  config = parsed;
+  for (const auto& l : config.locos) controller.setLocoName(l.uid, l.name.c_str());
+  activateLayout(config.layout);
+  JsonDocument d;
+  d["ok"] = true;
+  d["restart"] = wifiChanged;
+  d["msg"] = "configuracion guardada";
+  sendJson(d);
+  eventLog.add(LogKind::Info, "asistente completado");
+  if (wifiChanged) scheduleRestart(1500);
+}
+
+// ---- Maquetas ------------------------------------------------------------------------
+
+void handleLayoutList() {
+  JsonDocument doc;
+  JsonArray arr = doc.to<JsonArray>();
+  for (const String& n : layouts::list()) {
+    JsonObject o = arr.add<JsonObject>();
+    o["name"] = n;
+    o["title"] = layouts::title(n);
+    o["active"] = config.layout == n.c_str();
+  }
+  sendJson(doc);
+}
+
+void handleLayoutGet() {
+  String json;
+  if (!layouts::read(server.arg("name"), &json)) return sendError("no existe", 404);
+  server.send(200, "application/json", json);
+}
+
+void handleLayoutSave() {
+  const String name = server.arg("name");
+  String err;
+  if (!layouts::write(name, body(), &err)) return sendError(err);
+  if (config.layout == name.c_str()) activateLayout(config.layout);
+  sendOk("maqueta guardada");
+}
+
+void handleLayoutDelete() {
+  const String name = server.arg("name");
+  if (!layouts::remove(name)) return sendError("no se pudo borrar");
+  if (config.layout == name.c_str()) {
+    config.layout.clear();
+    saveConfig(config);
+    activateLayout("");
+  }
+  sendOk("maqueta borrada");
+}
+
+void handleLayoutActivate() {
+  const String name = server.arg("name");
+  if (name.length() && !layouts::exists(name)) return sendError("no existe esa maqueta");
+  config.layout = name.c_str();
+  if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+  activateLayout(config.layout);
+  sendOk(name.length() ? String("maqueta activa: ") + name : String("sin maqueta activa"));
+}
+
+// ---- Interfaz y portal cautivo ---------------------------------------------------------
+
+void sendGz(const char* type, const uint8_t* data, size_t len) {
+  server.sendHeader("Content-Encoding", "gzip");
+  server.sendHeader("Cache-Control", "no-cache");
+  server.send_P(200, type, reinterpret_cast<const char*>(data), len);
+}
+
+void redirectToApp() {
+  server.sendHeader("Location", "http://" + WiFi.softAPIP().toString() + "/", true);
+  server.send(302, "text/plain", "");
+}
+
+void handleNotFound() {
+  // En el punto de acceso, cualquier dominio desconocido lleva a la app.
+  const String host = server.hostHeader();
+  if (isCaptivePortal() && host != WiFi.softAPIP().toString() &&
+      host != String(config.hostname.c_str()) + ".local") {
+    return redirectToApp();
+  }
+  server.send(404, "text/plain", "no encontrado");
+}
+
 }  // namespace
 
 void webSetup() {
-  server.on("/", HTTP_GET, [] { server.send_P(200, "text/html; charset=utf-8", kIndexHtml); });
+  server.on("/", HTTP_GET, [] { sendGz("text/html; charset=utf-8", kIndexHtmlGz, sizeof(kIndexHtmlGz)); });
+  server.on("/manifest.json", HTTP_GET, [] { server.send_P(200, "application/manifest+json", kManifestJson); });
+  server.on("/icon.svg", HTTP_GET, [] { server.send_P(200, "image/svg+xml", kIconSvg); });
+  server.on("/icon-192.png", HTTP_GET, [] {
+    server.send_P(200, "image/png", reinterpret_cast<const char*>(kIconPng), sizeof(kIconPng));
+  });
+  // Detección de portal cautivo de Android, iOS/macOS y Windows.
+  for (const char* url : {"/generate_204", "/gen_204", "/hotspot-detect.html", "/library/test/success.html",
+                          "/connecttest.txt", "/ncsi.txt", "/redirect", "/canonical.html", "/success.txt"})
+    server.on(url, HTTP_GET, redirectToApp);
   server.on("/api/state", HTTP_GET, handleState);
   server.on("/api/log", HTTP_GET, handleLog);
   server.on("/api/power", HTTP_POST, handlePower);
@@ -355,7 +513,14 @@ void webSetup() {
   server.on("/api/config", HTTP_GET, handleConfigGet);
   server.on("/api/config", HTTP_POST, handleConfigSave);
   server.on("/api/restart", HTTP_POST, handleRestart);
-  server.onNotFound([] { server.send(404, "text/plain", "no encontrado"); });
+  server.on("/api/loconame", HTTP_POST, handleLocoName);
+  server.on("/api/setup", HTTP_POST, handleSetup);
+  server.on("/api/layouts", HTTP_GET, handleLayoutList);
+  server.on("/api/layout", HTTP_GET, handleLayoutGet);
+  server.on("/api/layout", HTTP_POST, handleLayoutSave);
+  server.on("/api/layout/delete", HTTP_POST, handleLayoutDelete);
+  server.on("/api/layout/activate", HTTP_POST, handleLayoutActivate);
+  server.onNotFound(handleNotFound);
   server.begin();
 }
 

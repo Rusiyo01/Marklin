@@ -36,7 +36,9 @@ ESP32 se reinicia para aplicarla.
     { "id": 3, "name": "antes_puente", "pin": 25 },
     { "id": 1005, "name": "s88_modulo1_c5" }
   ],
-  "autostart": []
+  "autostart": [],
+  "layout": "estacion",
+  "setupDone": true
 }
 ```
 
@@ -99,9 +101,17 @@ exposición.
 > ⚠️ Con `autostart`, los trenes pueden empezar a moverse en cuanto se
 > enciende el sistema. Úsalo solo cuando la maqueta esté preparada.
 
+### `layout` y `setupDone`
+
+- `layout`: maqueta activa (ver [maquetas.md](maquetas.md)); sus nombres de
+  desvíos y sensores se pueden usar en los scripts. `""` = ninguna.
+- `setupDone`: `false` hace que el asistente de primera configuración se
+  abra al entrar en la web.
+
 ## Volver a la configuración de fábrica
 
 Guarda `{}` como configuración: todos los campos toman su valor por
-defecto (WiFi propia `Marklin-ESP32` / `marklin123`). Si no puedes acceder
+defecto (WiFi propia `Marklin-ESP32` / `marklin123`) y vuelve a aparecer el
+asistente. Si no puedes acceder
 a la web, borra la memoria con `pio run -t erase` y vuelve a grabar el
 firmware.

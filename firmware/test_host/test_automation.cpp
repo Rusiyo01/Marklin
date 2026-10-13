@@ -67,6 +67,13 @@ struct FakeHost : Host {
     }
     return false;
   }
+  bool resolveAccessory(const std::string& name, uint32_t* uid) override {
+    if (name == "entrada") {
+      *uid = 0x3000;
+      return true;
+    }
+    return false;
+  }
 
   void setSensor(uint32_t id, bool on) {
     const int8_t v = on ? 1 : 0;
@@ -381,6 +388,17 @@ TEST(nombres_globales_y_alias) {
   for (const auto& l : h.logs)
     if (l == "g: Hola, Mundo # no es comentario") found = true;
   CHECK(found);
+}
+
+TEST(desvios_con_nombre_de_la_maqueta) {
+  FakeHost h;
+  Engine e(&h);
+  CHECK_STR(e.exec("switch entrada round"), "");
+  CHECK(h.called("switch 12288 0"));
+  CHECK(e.exec("switch salida round").find("desvio desconocido") != std::string::npos);
+  // Un número sigue siendo una dirección MM aunque haya nombres.
+  CHECK_STR(e.exec("switch 2 straight"), "");
+  CHECK(h.called("switch 12289 1"));
 }
 
 TEST(espera_aleatoria_y_azar) {

@@ -40,10 +40,22 @@ solo se usa para scripts, órdenes y configuración.
 | `POST /api/run?name=X` | Arranca el script. |
 | `POST /api/scriptstop?name=X` / `?slot=N` / `?all=1` | Detiene scripts (y para sus locos). |
 
+## Maquetas (C-Track Planner)
+
+| Método y ruta | Descripción |
+|---|---|
+| `GET /api/layouts` | Lista `[{"name", "title", "active"}]`. |
+| `GET /api/layout?name=X` | JSON de la maqueta (formato C-Track Planner + sección `marklin`). |
+| `POST /api/layout?name=X` | Guarda la maqueta del cuerpo (máx. 48 KB). |
+| `POST /api/layout/delete?name=X` | Borra la maqueta. |
+| `POST /api/layout/activate?name=X` | La activa (sus nombres valen en los scripts); `name=` vacío = ninguna. |
+
 ## Configuración
 
 | Método y ruta | Descripción |
 |---|---|
+| `POST /api/setup` | Asistente: cuerpo `{"locos":[{"name","loco"}], "layout":"...", "wifi":{"mode","ssid","password"}}`. Responde `restart: true` si cambia la WiFi. |
+| `POST /api/loconame?loco=mm2:24&name=x` | Guarda (o borra, con `name` vacío) el nombre de una loco. |
 | `GET /api/config` | Configuración actual (JSON). |
 | `POST /api/config` | Valida, guarda y reinicia. Cuerpo: JSON (ver [configuracion.md](configuracion.md)). |
 | `POST /api/restart` | Reinicia el ESP32. |

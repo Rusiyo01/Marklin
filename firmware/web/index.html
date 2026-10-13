@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Märklin ESP32</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#14161a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Märklin">
+<style>
+:root{--bg:#14161a;--panel:#1e2228;--line:#2e343d;--text:#e6e8eb;--dim:#9aa3ad;--acc:#f0b429;--ok:#3fb950;--bad:#f85149;--blue:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#0e1013;border-bottom:1px solid var(--line);padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+header h1{font-size:17px;margin:0 8px 0 0;color:var(--acc)}
+.badge{padding:3px 9px;border-radius:12px;font-size:13px;background:var(--line)}
+.badge.on{background:var(--ok);color:#000}.badge.off{background:var(--bad);color:#fff}
+.sp{flex:1}
+button{background:var(--line);color:var(--text);border:1px solid #3a414b;border-radius:7px;padding:7px 12px;font-size:14px;cursor:pointer}
+button:hover{border-color:var(--dim)}
+button.go{background:#1f6f37;border-color:#2ea043}button.stop{background:#8b1d1d;border-color:var(--bad)}
+button.emerg{background:var(--bad);color:#fff;font-weight:700;border-color:#ff7b72}
+button.act{background:var(--acc);color:#000;border-color:var(--acc)}
+button.small{padding:4px 8px;font-size:13px}
+nav{display:flex;gap:4px;padding:8px 12px 0;flex-wrap:wrap}
+nav button{border-radius:7px 7px 0 0;border-bottom:none}
+nav button.sel{background:var(--panel);color:var(--acc)}
+main{padding:12px}
+section{display:none}section.sel{display:block}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+.panel h2{font-size:15px;margin:0 0 10px;color:var(--dim);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input,textarea,select{background:#0e1013;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:14px}
+textarea{width:100%;font:13px/1.45 ui-monospace,Consolas,monospace;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.loco .name{font-weight:600}.loco .ref{color:var(--dim);font-size:13px}
+.loco .spd{font-size:26px;font-weight:700;color:var(--acc);min-width:70px;text-align:right}
+.loco input[type=range]{width:100%;margin:10px 0;accent-color:var(--acc)}
+.fns{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:8px}
+.fns button{padding:5px 0;font-size:12px}
+.dir{color:var(--dim);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.sensors{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.sensor{border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center;cursor:pointer;user-select:none}
+.sensor.s1{background:var(--ok);color:#000;border-color:var(--ok)}.sensor.s1 .dir{color:#000}
+.sensor.s-1{border-style:dashed;color:var(--dim)}
+.sensor b{display:block;font-size:20px}
+#log{height:55vh;overflow:auto;background:#0b0c0e;border:1px solid var(--line);border-radius:8px;padding:8px;font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap}
+.k-rx{color:#7d8590}.k-tx{color:var(--blue)}.k-script{color:var(--acc)}.k-error{color:var(--bad)}
+.msg{min-height:20px;font-size:14px;margin-top:6px}.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#000c;padding:8px 16px;border-radius:8px;display:none;z-index:9}
+.help{font:12.5px/1.5 ui-monospace,Consolas,monospace;color:var(--dim);white-space:pre-wrap;margin:0}
+details summary{cursor:pointer;color:var(--dim)}
+label.btnlike{background:var(--line);color:var(--text);border:1px solid #3a414b;border-radius:7px;padding:7px 12px;font-size:14px;cursor:pointer}
+button.link{background:none;border:0;padding:0 0 0 6px;color:var(--blue);font-size:12px;cursor:pointer}
+#plan{width:100%;height:auto;max-height:72vh;display:block;background:#0e1013;border-radius:10px}
+#plan .bed{fill:none;stroke:#2a3038;stroke-width:44}
+#plan .rt{fill:none;stroke:#9aa3ad;stroke-width:9;stroke-linecap:round}
+#plan .elev .bed{stroke:#3a4250}
+#plan .sw{cursor:pointer}
+#plan .sw .rt.on{stroke:var(--acc);stroke-width:12}
+#plan .sw .rt.off{stroke:#4b5563;stroke-dasharray:14 12}
+#plan .sens .bed{stroke:#1e4a2a}
+#plan .sens.s1 .bed{stroke:var(--ok)}
+#plan.editing .pc{cursor:pointer}
+#plan.editing .pc:hover .bed{stroke:#34506e}
+#plan .selp .bed{stroke:var(--blue)!important}
+#plan text{font:600 44px system-ui,sans-serif;fill:#e6e8eb;paint-order:stroke;stroke:#0e1013;stroke-width:10px;text-anchor:middle;pointer-events:none}
+#plan text.st{fill:#7ee787}
+#wizard{position:fixed;inset:0;background:#000b;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px}
+#wizard[hidden]{display:none}
+.wbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:580px;width:100%;max-height:94vh;overflow:auto;padding:18px}
+.wbox h2{margin:6px 0 8px;font-size:19px}.wbox p{color:var(--dim);margin:6px 0 12px}
+#wzSteps{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--dim)}
+#wzSteps span{padding:3px 8px;border-radius:10px;background:var(--line)}#wzSteps .cur{background:var(--acc);color:#000}#wzSteps .past{color:var(--ok)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+.chk b{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--line);flex:none}
+.chk.ok b{background:var(--ok);color:#000}
+label.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:9px;margin:6px 0;cursor:pointer}
+.lrow{padding:4px 0}.lrow input{width:150px}
+.sum{padding-left:18px;line-height:1.8}
+.wfoot{margin-top:16px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:14px}.kv span:nth-child(odd){color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Märklin ESP32</h1>
+  <span id="power" class="badge">vía: ?</span>
+  <span id="ms2" class="badge">MS2: ?</span>
+  <span class="sp"></span>
+  <button class="go" onclick="post('/api/power',{on:1})">GO</button>
+  <button class="stop" onclick="post('/api/power',{on:0})">STOP</button>
+  <button class="emerg" onclick="post('/api/emergency')" title="Corta la vía y detiene todos los scripts">EMERGENCIA</button>
+</header>
+<nav>
+  <button data-tab="mando" class="sel">Mando</button>
+  <button data-tab="maq">Maqueta</button>
+  <button data-tab="auto">Automático</button>
+  <button data-tab="sens">Sensores y desvíos</button>
+  <button data-tab="mon">Monitor</button>
+  <button data-tab="cfg">Ajustes</button>
+</nav>
+<main>
+
+<section id="mando" class="sel">
+  <div class="panel row">
+    <input id="newLoco" placeholder="mm2:24, dcc:3, mfx:5" size="16">
+    <button onclick="addLoco()">Añadir loco</button>
+    <span class="sp"></span>
+    <button onclick="post('/api/halt')">Parar todas las locos</button>
+  </div>
+  <div id="locos" class="grid"></div>
+  <p id="noLocos" class="dir">No hay locos todavía. Añade una con su dirección, defínelas en Ajustes,
+  o mueve una loco con la MS2: aparecerá aquí automáticamente.</p>
+</section>
+
+<section id="maq">
+  <div class="panel row">
+    <select id="layoutSel" style="max-width:260px"></select>
+    <label class="btnlike">Subir maqueta (C-Track Planner)<input type="file" id="layoutFile" accept=".json,.html,.htm" hidden></label>
+    <span class="sp"></span>
+    <button id="editBtn" onclick="toggleEdit()">Asignar desvíos y sensores</button>
+    <button onclick="delLayout()">Borrar</button>
+  </div>
+  <div class="panel">
+    <h2 id="planTitle"></h2>
+    <svg id="plan" xmlns="http://www.w3.org/2000/svg"></svg>
+    <p id="planEmpty" class="dir">No hay maqueta seleccionada. Elige una de ejemplo arriba o sube la tuya:
+    en <b>C-Track Planner</b> pulsa <i>Guardar → Exportar archivo de maqueta (.json)</i> (o exporta la app sin conexión .html)
+    y súbela con el botón <i>Subir maqueta</i>.</p>
+    <p id="planHint" class="dir">Toca un desvío para cambiarlo. Los sensores activos se ven en verde.</p>
+  </div>
+  <div class="panel" id="editPanel" hidden></div>
+  <div class="panel" id="mapBox" hidden>
+    <h2>Desvíos y sensores de esta maqueta</h2>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+      <table><tbody id="mapTurnouts"></tbody></table>
+      <table><tbody id="mapSensors"></tbody></table>
+    </div>
+    <p id="mapHint" class="help" style="margin-top:8px"></p>
+    <div class="row" style="margin-top:8px">
+      <button onclick="autoNumber()">Numerar desvíos automáticamente</button>
+      <span class="sp"></span>
+      <button id="saveMap" onclick="saveMap()">Guardar asignaciones</button>
+    </div>
+  </div>
+</section>
+
+<section id="auto">
+  <div class="panel">
+    <h2>Scripts en marcha</h2>
+    <table><thead><tr><th>Script</th><th>Estado</th><th>Línea</th><th>Actividad</th><th></th></tr></thead>
+    <tbody id="runners"></tbody></table>
+    <div class="row" style="margin-top:8px"><button onclick="post('/api/scriptstop',{all:1})">Detener todos</button></div>
+  </div>
+  <div class="panel">
+    <h2>Scripts guardados</h2>
+    <table><tbody id="scripts"></tbody></table>
+  </div>
+  <div class="panel">
+    <h2>Editor</h2>
+    <div class="row" style="margin-bottom:8px">
+      <input id="sname" placeholder="nombre_del_script" size="22">
+      <button onclick="saveScript()">Guardar</button>
+      <button onclick="checkScript()">Comprobar</button>
+      <button onclick="saveScript(true)">Guardar y ejecutar</button>
+      <button onclick="newScript()">Nuevo</button>
+      <span class="sp"></span>
+      <button onclick="delScript()">Borrar</button>
+    </div>
+    <textarea id="src" rows="20" spellcheck="false" placeholder="# Escribe aquí tu script"></textarea>
+    <div id="smsg" class="msg"></div>
+    <details><summary>Chuleta del lenguaje</summary><pre class="help">
+loco tren mm2 24            alias de loco (mm2 / dcc / mfx + dirección)
+sensor anden 3              alias de sensor
+power on | off              corriente de vía
+speed tren 400 | 40%        velocidad 0-1000 o porcentaje
+ramp tren 60% 3s            acelera/frena gradualmente
+dir tren fwd | rev | toggle sentido (deja la loco parada)
+func tren 0 on | off        funciones F0-F31
+estop tren                  parada de emergencia de una loco
+halt                        para todas las locos
+switch 5 straight | round   desvío/señal (también dcc:5)
+wait 2s | 500ms | 1m        espera
+wait random 10s 30s         espera aleatoria
+wait sensor 3 on [timeout 60s [else etiqueta]]
+label nombre / goto nombre  saltos
+if sensor 3 on goto x       salto condicional
+if chance 30 goto x         salto al azar (30 %)
+if locked puente goto x     si otro script tiene el bloqueo
+repeat 5 ... end            bucle (repeat sin número = siempre)
+lock puente / unlock puente reservar un tramo entre scripts
+log texto                   mensaje al registro
+exit                        terminar
+</pre></details>
+  </div>
+  <div class="panel"><h2>Mensajes de los scripts</h2><div id="slog" class="help"></div></div>
+</section>
+
+<section id="sens">
+  <div class="panel">
+    <h2>Sensores <span class="dir">(clic = simular cambio)</span></h2>
+    <div id="sensors" class="sensors"></div>
+    <div class="row" style="margin-top:10px">
+      <input id="simId" type="number" min="1" placeholder="nº sensor" style="width:110px">
+      <button onclick="simSensor(1)">Simular ON</button>
+      <button onclick="simSensor(0)">Simular OFF</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Desvíos y señales</h2>
+    <div class="row">
+      <input id="accAddr" placeholder="5 o dcc:12" size="10">
+      <button onclick="acc(1)">Recto / verde</button>
+      <button onclick="acc(0)">Desviado / rojo</button>
+      <button onclick="acc(2)">Amarillo</button>
+      <button onclick="acc(3)">Blanco</button>
+    </div>
+    <table style="margin-top:10px"><tbody id="accs"></tbody></table>
+  </div>
+</section>
+
+<section id="mon">
+  <div class="panel row">
+    <input id="cmd" placeholder="speed mm2:24 30%   |   func dcc:3 0 on   |   switch 5 round" style="flex:1;min-width:200px">
+    <button onclick="sendCmd()">Enviar</button>
+  </div>
+  <div class="panel">
+    <div class="row" style="margin-bottom:8px">
+      <label><input type="checkbox" id="fRx" checked> CAN recibido</label>
+      <label><input type="checkbox" id="fTx" checked> CAN enviado</label>
+      <label><input type="checkbox" id="fInfo" checked> Info/scripts</label>
+      <label><input type="checkbox" id="fPause"> Pausa</label>
+      <span class="sp"></span>
+      <button class="small" onclick="logLines=[];renderLog()">Limpiar</button>
+    </div>
+    <div id="log"></div>
+  </div>
+</section>
+
+<section id="cfg">
+  <div class="panel">
+    <h2>Estado</h2>
+    <div id="info" class="kv"></div>
+  </div>
+  <div class="panel">
+    <h2>Equipos en el bus CAN</h2>
+    <table><tbody id="devices"></tbody></table>
+    <div class="row" style="margin-top:8px"><button onclick="post('/api/ping')">Buscar equipos (ping)</button></div>
+  </div>
+  <div class="panel">
+    <h2>Configuración (JSON)</h2>
+    <textarea id="cfgText" rows="22" spellcheck="false"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button onclick="openWizard()">Asistente de configuración</button>
+      <button onclick="loadCfg()">Recargar</button>
+      <button class="act" onclick="saveCfg()">Guardar y reiniciar</button>
+      <span class="sp"></span>
+      <button onclick="post('/api/restart')">Reiniciar ESP32</button>
+    </div>
+    <div id="cmsg" class="msg"></div>
+  </div>
+</section>
+</main>
+<div id="toast"></div>
+<div id="wizard" hidden><div class="wbox">
+  <div id="wzSteps"></div>
+  <div id="wzBody"></div>
+  <div class="row wfoot"><button id="wzLater" onclick="closeWizard(true)">Más tarde</button><span class="sp"></span>
+    <button id="wzBack" onclick="wzBack()">Atrás</button><button id="wzNext" class="act" onclick="wzNext()">Siguiente</button></div>
+</div></div>
+
+<script src="ctrack.js"></script>
+<script src="app.js"></script>
+<script src="layout.js"></script>
+<script src="wizard.js"></script>
+</body>
+</html>

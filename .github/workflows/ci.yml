@@ -2,7 +2,12 @@ name: CI
 
 on:
   push:
+    branches: ["**"]
+    tags: ["v*"]
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   tests:
@@ -12,6 +17,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Protocolo CAN y motor de scripts
         run: make -C firmware/test_host
+      - name: Geometría e importación de maquetas
+        run: node firmware/test_host/test_layouts.js
+      - name: Recursos web embebidos al día
+        run: python3 firmware/tools/build_web.py --check
 
   firmware:
     name: Firmware ${{ matrix.env }}
@@ -19,7 +28,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [esp32dev, esp32-s3, esp32-c3]
+        include:
+          - { env: esp32dev, chip: esp32, boot: "0x1000" }
+          - { env: esp32-s3, chip: esp32s3, boot: "0x0" }
+          - { env: esp32-c3, chip: esp32c3, boot: "0x0" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,14 +43,89 @@ jobs:
             ~/.platformio
             ~/.cache/pip
           key: pio-${{ matrix.env }}-${{ hashFiles('firmware/platformio.ini') }}
-      - name: Instalar PlatformIO
-        run: pip install platformio
+      - name: Instalar PlatformIO y esptool
+        run: pip install platformio esptool==4.8.1
       - name: Compilar
         run: pio run -d firmware -e ${{ matrix.env }}
+      - name: Binario único para el instalador
+        run: |
+          B=firmware/.pio/build/${{ matrix.env }}
+          mkdir -p merged
+          esptool.py --chip ${{ matrix.chip }} merge_bin -o merged/marklin-${{ matrix.chip }}.bin \
+            ${{ matrix.boot }} $B/bootloader.bin 0x8000 $B/partitions.bin \
+            0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin \
+            0x10000 $B/firmware.bin
       - uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.env }}
-          path: |
-            firmware/.pio/build/${{ matrix.env }}/firmware.bin
-            firmware/.pio/build/${{ matrix.env }}/bootloader.bin
-            firmware/.pio/build/${{ matrix.env }}/partitions.bin
+          name: merged-${{ matrix.chip }}
+          path: merged/marklin-${{ matrix.chip }}.bin
+
+  instalador:
+    name: Instalador (web y sin conexión)
+    needs: [tests, firmware]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: merged-*
+          merge-multiple: true
+          path: bins
+      - uses: actions/cache@v4
+        with:
+          path: esptool-cache
+          key: esptool-v4.8.1
+      - name: Empaquetar
+        run: ESPTOOL_CACHE=$PWD/esptool-cache firmware/tools/package_installer.sh bins out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instalador-sin-conexion
+          path: out/dist/*
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out/site
+
+  pages:
+    name: Publicar página de instalación
+    needs: instalador
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: ¿GitHub Pages activado?
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" --jq .build_type > build_type.txt 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Para publicar la página de instalación activa GitHub Pages: Settings > Pages > Source: GitHub Actions"
+          fi
+      - name: Desplegar
+        id: deploy
+        if: steps.check.outputs.enabled == 'true'
+        uses: actions/deploy-pages@v4
+
+  release:
+    name: Publicar versión
+    needs: instalador
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: instalador-sin-conexion
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

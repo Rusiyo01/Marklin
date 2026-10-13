@@ -162,6 +162,9 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
     if (*name) cfg.autostart.push_back(name);
   }
 
+  readStr(doc["layout"], &cfg.layout);
+  cfg.setupDone = doc["setupDone"] | false;
+
   *out = cfg;
   return true;
 }
@@ -208,6 +211,9 @@ String configToJson(const AppConfig& cfg) {
   JsonArray autostart = doc["autostart"].to<JsonArray>();
   for (const auto& a : cfg.autostart) autostart.add(a);
 
+  doc["layout"] = cfg.layout;
+  doc["setupDone"] = cfg.setupDone;
+
   String out;
   serializeJsonPretty(doc, out);
   return out;
@@ -227,6 +233,8 @@ bool loadConfig(AppConfig* cfg, String* error) {
   f.close();
   return parseConfig(json, cfg, error);
 }
+
+bool saveConfig(const AppConfig& cfg) { return saveConfigJson(configToJson(cfg)); }
 
 bool saveConfigJson(const String& json) {
   const char* tmp = "/config.tmp";
