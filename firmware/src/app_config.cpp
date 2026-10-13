@@ -114,6 +114,8 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
     index++;
     LocoConfig lc;
     lc.name = lowerStr(l["name"] | "");
+    lc.label = l["label"] | "";
+    if (lc.label.size() > 60) lc.label.resize(60);
     const char* ref = l["loco"] | "";
     if (!validName(lc.name)) {
       *error = String("locos[") + index + "]: nombre no valido (letras, numeros, _ y -)";
@@ -195,6 +197,7 @@ String configToJson(const AppConfig& cfg) {
   for (const auto& l : cfg.locos) {
     JsonObject o = locos.add<JsonObject>();
     o["name"] = l.name;
+    if (!l.label.empty()) o["label"] = l.label;
     char ref[24];
     marklin::formatLocoUid(l.uid, ref, sizeof(ref));
     o["loco"] = ref;

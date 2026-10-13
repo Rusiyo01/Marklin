@@ -91,6 +91,11 @@ void handleState() {
     marklin::formatLocoUid(l.uid, ref, sizeof(ref));
     o["ref"] = ref;
     o["name"] = l.name;
+    for (const auto& c : config.locos)
+      if (c.uid == l.uid) {
+        o["reg"] = true;
+        if (!c.label.empty()) o["label"] = c.label;
+      }
     o["speed"] = l.speed;
     o["dir"] = l.direction;
     o["fn"] = l.functions;
@@ -339,35 +344,58 @@ void handleRestart() {
   scheduleRestart(500);
 }
 
-// Guarda (o borra, con name vacío) el nombre de una loco en la configuración.
-void handleLocoName() {
+// Registro de locomotoras (se guarda en la configuración):
+//   loco=mm2:24 name=cocodrilo label="Cocodrilo SBB"   alta o cambio
+//   old=mm2:23                                          si cambia la dirección
+//   delete=1                                            baja
+void handleLocoReg() {
   uint32_t uid;
-  if (!argLoco(&uid)) return sendError("loco no valida");
+  if (!argLoco(&uid)) return sendError("direccion de loco no valida (ej. mm2:24, dcc:3, mfx:5)");
+  auto find = [](uint32_t u) {
+    return std::find_if(config.locos.begin(), config.locos.end(),
+                        [u](const LocoConfig& l) { return l.uid == u; });
+  };
+  if (server.hasArg("delete")) {
+    auto it = find(uid);
+    if (it == config.locos.end()) return sendError("esa loco no esta registrada");
+    config.locos.erase(it);
+    if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+    controller.setLocoName(uid, "");
+    return sendOk("loco eliminada del registro");
+  }
   String name = server.arg("name");
   name.trim();
   name.toLowerCase();
   const std::string n = name.c_str();
-  auto it = std::find_if(config.locos.begin(), config.locos.end(),
-                         [&](const LocoConfig& l) { return l.uid == uid; });
-  if (n.empty()) {
-    if (it != config.locos.end()) config.locos.erase(it);
-  } else {
-    if (!layouts::validName(name) || !(n[0] >= 'a' && n[0] <= 'z'))
-      return sendError("nombre no valido: empieza por una letra; solo minusculas, numeros, _ y -");
-    for (const auto& l : config.locos)
-      if (l.name == n && l.uid != uid) return sendError("ya hay otra loco con ese nombre");
-    if (it != config.locos.end()) {
-      it->name = n;
-    } else {
-      LocoConfig lc;
-      lc.name = n;
-      lc.uid = uid;
-      config.locos.push_back(lc);
-    }
+  if (!layouts::validName(name) || !(n[0] >= 'a' && n[0] <= 'z'))
+    return sendError("nombre para scripts no valido: empieza por una letra; solo minusculas, numeros, _ y -");
+  String label = server.arg("label");
+  label.trim();
+  if (label.length() > 60) label = label.substring(0, 60);
+
+  uint32_t oldUid = uid;
+  if (server.hasArg("old") && server.arg("old").length()) {
+    if (!automation::parseLocoRef(server.arg("old").c_str(), &oldUid))
+      return sendError("direccion anterior no valida");
   }
+  for (const auto& l : config.locos) {
+    if (l.uid == oldUid) continue;
+    if (l.name == n) return sendError("ya hay otra loco con ese nombre");
+    if (l.uid == uid) return sendError("ya hay otra loco registrada con esa direccion");
+  }
+  auto it = find(oldUid);
+  if (it == config.locos.end()) {
+    config.locos.push_back(LocoConfig());
+    it = config.locos.end() - 1;
+  }
+  it->uid = uid;
+  it->name = n;
+  it->label = label.c_str();
   if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+  if (oldUid != uid) controller.setLocoName(oldUid, "");
   controller.setLocoName(uid, n.c_str());
-  sendOk(n.empty() ? String("nombre borrado") : String("guardada como '") + name + "'");
+  controller.queryLoco(uid);
+  sendOk(String("registrada: ") + (label.length() ? label : name));
 }
 
 // Asistente de primera configuración.
@@ -513,7 +541,7 @@ void webSetup() {
   server.on("/api/config", HTTP_GET, handleConfigGet);
   server.on("/api/config", HTTP_POST, handleConfigSave);
   server.on("/api/restart", HTTP_POST, handleRestart);
-  server.on("/api/loconame", HTTP_POST, handleLocoName);
+  server.on("/api/locoreg", HTTP_POST, handleLocoReg);
   server.on("/api/setup", HTTP_POST, handleSetup);
   server.on("/api/layouts", HTTP_GET, handleLayoutList);
   server.on("/api/layout", HTTP_GET, handleLayoutGet);

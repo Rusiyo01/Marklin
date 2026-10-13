@@ -19,15 +19,21 @@ además de manejarlas desde el móvil o el PC.
 1. **Instala** el firmware desde el navegador (Chrome/Edge) en
    **https://rusiyo01.github.io/Marklin/** — o con el instalador sin conexión
    para Windows, Mac o Linux. Todo viene preconfigurado.
-2. **Conéctate** con el móvil a la WiFi **`Marklin-ESP32`** (contraseña
-   `marklin123`): la aplicación se abre sola.
-3. **Sigue el asistente**: comprueba la Gleisbox, recoge tus locos, elige o
-   sube tu maqueta de **C-Track Planner** y tu WiFi.
+2. **Conéctate** desde el portátil (o el móvil) a la WiFi **`Marklin-ESP32`**
+   (contraseña `marklin123`) y abre **http://192.168.4.1**; en el móvil se abre sola.
+3. **Sigue el asistente**: comprueba la Gleisbox, registra tus locos, elige o
+   sube tu maqueta de **C-Track Planner** y une el ESP32 a tu WiFi de casa
+   para usarlo desde el portátil en **http://marklin.local**.
 
 Detalles en [docs/instalacion.md](docs/instalacion.md). Antes de conectar
 el ESP32 a la Gleisbox, lee la [guía de montaje](docs/hardware.md).
 
 ## Qué hace
+
+**El portátil es el puesto de mando** (y el móvil, un mando extra): plano de
+la maqueta con los desvíos a un clic, tu lista de locomotoras registradas y
+de **1 a 4 mandos a la vez en pantalla dividida**, con atajos de teclado.
+Ver [docs/puesto-de-mando.md](docs/puesto-de-mando.md).
 
 - **Habla el protocolo CAN de Märklin** (el mismo de la MS2/CS2/CS3): corriente
   de vía, velocidad, sentido, funciones F0–F31, desvíos y señales, para locos
@@ -141,6 +147,7 @@ goto inicio
 
 | Documento | Contenido |
 |---|---|
+| [docs/puesto-de-mando.md](docs/puesto-de-mando.md) | Puesto de mando en el portátil: locomotoras registradas, 1–4 mandos, plano, teclado. |
 | [docs/instalacion.md](docs/instalacion.md) | Instalación desde el navegador o sin conexión, asistente, actualizar y publicar versiones. |
 | [docs/maquetas.md](docs/maquetas.md) | Subir maquetas de C-Track Planner, asignar desvíos y sensores, ejemplos incluidos. |
 | [docs/investigacion.md](docs/investigacion.md) | Cómo funciona MS2 + Gleisbox, el protocolo CAN de Märklin, direcciones, arranque de la Gleisbox y fuentes. |

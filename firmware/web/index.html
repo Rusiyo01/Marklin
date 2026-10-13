@@ -59,20 +59,86 @@ th{color:var(--dim);font-weight:500}
 details summary{cursor:pointer;color:var(--dim)}
 label.btnlike{background:var(--line);color:var(--text);border:1px solid #3a414b;border-radius:7px;padding:7px 12px;font-size:14px;cursor:pointer}
 button.link{background:none;border:0;padding:0 0 0 6px;color:var(--blue);font-size:12px;cursor:pointer}
-#plan{width:100%;height:auto;max-height:72vh;display:block;background:#0e1013;border-radius:10px}
-#plan .bed{fill:none;stroke:#2a3038;stroke-width:44}
-#plan .rt{fill:none;stroke:#9aa3ad;stroke-width:9;stroke-linecap:round}
-#plan .elev .bed{stroke:#3a4250}
-#plan .sw{cursor:pointer}
-#plan .sw .rt.on{stroke:var(--acc);stroke-width:12}
-#plan .sw .rt.off{stroke:#4b5563;stroke-dasharray:14 12}
-#plan .sens .bed{stroke:#1e4a2a}
-#plan .sens.s1 .bed{stroke:var(--ok)}
-#plan.editing .pc{cursor:pointer}
-#plan.editing .pc:hover .bed{stroke:#34506e}
-#plan .selp .bed{stroke:var(--blue)!important}
-#plan text{font:600 44px system-ui,sans-serif;fill:#e6e8eb;paint-order:stroke;stroke:#0e1013;stroke-width:10px;text-anchor:middle;pointer-events:none}
-#plan text.st{fill:#7ee787}
+svg.planview{width:100%;display:block;background:#0e1013;border-radius:10px}
+#plan{height:auto;max-height:72vh}
+#deskPlan{height:max(200px,calc(100vh - 590px));cursor:grab;touch-action:none}
+#deskPlan:active{cursor:grabbing}
+#desk.sel{display:grid;grid-template-columns:250px minmax(0,1fr);gap:12px;align-items:start}
+.rosterbox{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto;margin:0}
+.rosterbox h3{font-size:13px;color:var(--dim);margin:14px 0 6px;font-weight:600}
+.rl{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:9px;margin:6px 0;cursor:pointer;background:#181b20}
+.rl:hover{border-color:var(--dim)}.rl.incab{border-color:var(--acc)}
+.rlt{flex:1;min-width:0;position:relative}.rlt b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rlt small{color:var(--dim);font-size:12px}
+.rlt .bar{position:absolute;left:0;bottom:-5px;height:2px;background:var(--acc);border-radius:2px}
+.rl .badge{background:var(--acc);color:#000;font-weight:700}
+p.small{font-size:12.5px}
+.deskmain{display:flex;flex-direction:column;gap:12px;min-width:0}
+.deskmain>.panel{margin:0}
+#desk[data-view=cabs] .planbox{display:none}
+#desk[data-view=plan] #cabs{display:none}
+#desk[data-view=plan] #deskPlan{height:calc(100vh - 260px)}
+.seg{display:inline-flex}.seg button{border-radius:0;margin-left:-1px}
+.seg button:first-child{border-radius:7px 0 0 7px;margin-left:0}.seg button:last-child{border-radius:0 7px 7px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:4px 10px;border-radius:14px;font-size:13px}.chip span{color:var(--dim)}
+.chip.dv{border-color:var(--acc)}.chip.dv span{color:var(--acc)}
+details.keys{font-size:13px}details.keys .help{position:absolute;right:20px;background:#0b0c0e;border:1px solid var(--line);border-radius:8px;padding:8px 10px;z-index:4;margin-top:6px}
+.cabs{display:grid;gap:10px}
+.cabs.n1{grid-template-columns:minmax(0,520px)}
+.cabs.n2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cabs.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cabs.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
+#desk[data-view=cabs] .cabs.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+#desk[data-view=cabs] .cabs.n1{grid-template-columns:minmax(0,640px)}
+.cab{margin:0;position:relative;border-width:2px}
+.cab.activecab{border-color:var(--acc)}
+.cab.drop{border-color:var(--blue);background:#1b2633}
+.cabhead{display:flex;align-items:center;gap:8px}
+.cabn{width:24px;height:24px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.cab.activecab .cabn{background:var(--acc);color:#000}
+.cabt{flex:1;min-width:0}.cabt b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cabt small{color:var(--dim);font-size:12px}
+.cabempty .pick{width:100%;font-size:14px}.cabempty p{margin:14px 0 0}
+.cab.empty .cabbody,.cab.empty .cabt,.cab.empty .rel{display:none}
+.cab:not(.empty) .cabempty{display:none}
+.cabempty{color:var(--dim);text-align:center;padding:16px 4px;font-size:14px}
+.speedrow{display:flex;align-items:baseline;justify-content:space-between;margin-top:8px}
+.speedrow .spd{font-size:30px;font-weight:800;color:var(--acc);line-height:1.1}.dirind{color:var(--dim);font-size:13px}
+.cab input[type=range]{width:100%;margin:6px 0;accent-color:var(--acc);height:24px}
+.cab .fns button{padding:4px 0}
+.ctl{display:grid;grid-template-columns:1fr .7fr 1.2fr .7fr 1fr;gap:5px}
+.ctl button{padding:9px 0;font-size:16px}.ctl button.act{background:#2a3a52;border-color:var(--blue)}
+.ctl .stopb{background:#3a1e1e;border-color:#6e2b2b}
+.cab .fns{grid-template-columns:repeat(8,1fr)}
+.cabs.n3 .cab .fns,.cabs.n4 .cab .fns{grid-template-columns:repeat(4,1fr)}
+#desk[data-view=cabs] .cabs.n4 .cab .fns{grid-template-columns:repeat(8,1fr)}
+details.more summary{font-size:12px;margin-top:6px}
+.modal{position:fixed;inset:0;background:#000b;z-index:21;display:flex;align-items:center;justify-content:center;padding:12px}
+.modal[hidden]{display:none}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.formgrid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--dim)}
+@media(max-width:900px){
+  #desk.sel{grid-template-columns:1fr}
+  .rosterbox{position:static;max-height:34vh}
+  .cabs.n2,.cabs.n3,.cabs.n4,#desk[data-view=cabs] .cabs.n4{grid-template-columns:1fr}
+  .cabs .cab .fns{grid-template-columns:repeat(8,1fr)}
+  #deskPlan{height:38vh}
+  #desk[data-view=plan] #deskPlan{height:60vh}
+  .formgrid{grid-template-columns:1fr}
+}
+svg.planview .bed{fill:none;stroke:#2a3038;stroke-width:44}
+svg.planview .rt{fill:none;stroke:#9aa3ad;stroke-width:9;stroke-linecap:round}
+svg.planview .elev .bed{stroke:#3a4250}
+svg.planview .sw{cursor:pointer}
+svg.planview .sw .rt.on{stroke:var(--acc);stroke-width:12}
+svg.planview .sw .rt.off{stroke:#4b5563;stroke-dasharray:14 12}
+svg.planview .sens .bed{stroke:#1e4a2a}
+svg.planview .sens.s1 .bed{stroke:var(--ok)}
+svg.planview.editing .pc{cursor:pointer}
+svg.planview.editing .pc:hover .bed{stroke:#34506e}
+svg.planview .selp .bed{stroke:var(--blue)!important}
+svg.planview text{font:600 var(--fs,44px) system-ui,sans-serif;fill:#e6e8eb;paint-order:stroke;stroke:#0e1013;stroke-width:calc(var(--fs,44px)/4);text-anchor:middle;pointer-events:none}
+svg.planview text.st{fill:#7ee787}
 #wizard{position:fixed;inset:0;background:#000b;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px}
 #wizard[hidden]{display:none}
 .wbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:580px;width:100%;max-height:94vh;overflow:auto;padding:18px}
@@ -100,7 +166,7 @@ label.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1
   <button class="emerg" onclick="post('/api/emergency')" title="Corta la vía y detiene todos los scripts">EMERGENCIA</button>
 </header>
 <nav>
-  <button data-tab="mando" class="sel">Mando</button>
+  <button data-tab="desk" class="sel">Puesto de mando</button>
   <button data-tab="maq">Maqueta</button>
   <button data-tab="auto">Automático</button>
   <button data-tab="sens">Sensores y desvíos</button>
@@ -109,17 +175,47 @@ label.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1
 </nav>
 <main>
 
-<section id="mando" class="sel">
-  <div class="panel row">
-    <input id="newLoco" placeholder="mm2:24, dcc:3, mfx:5" size="16">
-    <button onclick="addLoco()">Añadir loco</button>
-    <span class="sp"></span>
-    <button onclick="post('/api/halt')">Parar todas las locos</button>
+<section id="desk" class="sel" data-view="both">
+  <aside class="panel rosterbox">
+    <div class="row"><h2 style="margin:0">Locomotoras</h2><span class="sp"></span>
+      <button class="small act" onclick="openLocoDialog()">+ Registrar</button></div>
+    <div id="roster"></div>
+    <p class="dir small">Clic: al primer mando libre. También puedes arrastrarla a un mando.
+    Las que muevas con la MS2 aparecen solas en "detectadas".</p>
+  </aside>
+  <div class="deskmain">
+    <div id="deskBar" class="panel row">
+      <span class="seg"><button data-view="both" onclick="setDeskView('both')">Plano y mandos</button><button data-view="cabs" onclick="setDeskView('cabs')">Solo mandos</button><button data-view="plan" onclick="setDeskView('plan')">Solo plano</button></span>
+      <span class="dir">Mandos:</span>
+      <span class="seg"><button data-n="1" onclick="setCabCount(1)">1</button><button data-n="2" onclick="setCabCount(2)">2</button><button data-n="3" onclick="setCabCount(3)">3</button><button data-n="4" onclick="setCabCount(4)">4</button></span>
+      <span class="sp"></span>
+      <button class="small" onclick="post('/api/halt')" title="Velocidad 0 a todas las locos">Parar todas</button>
+      <details class="keys"><summary>Teclado</summary><div class="help">Tab: siguiente mando · ↑/↓: ±5 % · RePág/AvPág: ±20 %
+←/→: sentido · Espacio: parar loco · 0–9: funciones F0–F9 · Esc: STOP (corta la vía)</div></details>
+    </div>
+    <div class="panel planbox">
+      <div class="row"><h2 class="planTitle" style="margin:0"></h2><span class="sp"></span>
+        <div id="deskTurnouts" class="chips"></div>
+        <span class="seg"><button class="small" onclick="zoomPlan(1/1.3)" title="Acercar">＋</button><button class="small" onclick="fitPlan()" title="Ajustar">⤢</button><button class="small" onclick="zoomPlan(1.3)" title="Alejar">－</button></span></div>
+      <svg id="deskPlan" class="planview" xmlns="http://www.w3.org/2000/svg"></svg>
+      <p class="planEmpty dir">No hay maqueta activa. Elige o sube una en la pestaña <b>Maqueta</b>.</p>
+    </div>
+    <div id="cabs" class="cabs"></div>
   </div>
-  <div id="locos" class="grid"></div>
-  <p id="noLocos" class="dir">No hay locos todavía. Añade una con su dirección, defínelas en Ajustes,
-  o mueve una loco con la MS2: aparecerá aquí automáticamente.</p>
 </section>
+
+<div id="locoDlg" class="modal" hidden><div class="wbox">
+  <h2 id="dlgTitle">Registrar locomotora</h2>
+  <div class="formgrid">
+    <label>Nombre <input id="dlgLabel" placeholder="Cocodrilo SBB"></label>
+    <label>Protocolo <select id="dlgProto"><option value="mm2">MM2 (Motorola)</option><option value="dcc">DCC</option><option value="mfx">mfx (SID de la MS2)</option></select></label>
+    <label>Dirección <input id="dlgAddr" type="number" min="1"></label>
+    <label>Nombre en scripts <input id="dlgName"></label>
+  </div>
+  <p class="dir">Truco: mueve la loco con la MS2 y aparecerá en "detectadas" con su dirección; pulsa Registrar.</p>
+  <div class="row wfoot"><button id="dlgDel" onclick="deleteLocoDialog()">Eliminar</button><span class="sp"></span>
+    <button onclick="closeLocoDialog()">Cancelar</button><button class="act" onclick="saveLocoDialog()">Guardar</button></div>
+</div></div>
 
 <section id="maq">
   <div class="panel row">
@@ -130,9 +226,9 @@ label.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1
     <button onclick="delLayout()">Borrar</button>
   </div>
   <div class="panel">
-    <h2 id="planTitle"></h2>
-    <svg id="plan" xmlns="http://www.w3.org/2000/svg"></svg>
-    <p id="planEmpty" class="dir">No hay maqueta seleccionada. Elige una de ejemplo arriba o sube la tuya:
+    <h2 class="planTitle"></h2>
+    <svg id="plan" class="planview" xmlns="http://www.w3.org/2000/svg"></svg>
+    <p class="planEmpty dir">No hay maqueta seleccionada. Elige una de ejemplo arriba o sube la tuya:
     en <b>C-Track Planner</b> pulsa <i>Guardar → Exportar archivo de maqueta (.json)</i> (o exporta la app sin conexión .html)
     y súbela con el botón <i>Subir maqueta</i>.</p>
     <p id="planHint" class="dir">Toca un desvío para cambiarlo. Los sensores activos se ven en verde.</p>
@@ -280,6 +376,7 @@ exit                        terminar
 <script src="ctrack.js"></script>
 <script src="app.js"></script>
 <script src="layout.js"></script>
+<script src="desk.js"></script>
 <script src="wizard.js"></script>
 </body>
 </html>

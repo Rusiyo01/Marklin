@@ -26,7 +26,7 @@ ESP32 se reinicia para aplicarla.
   },
   "estopPin": 0,
   "locos": [
-    { "name": "cocodrilo", "loco": "mm2:24" },
+    { "name": "cocodrilo", "label": "Cocodrilo SBB", "loco": "mm2:24" },
     { "name": "ice", "loco": "dcc:3" },
     { "name": "br89", "loco": "mfx:5" }
   ],
@@ -74,12 +74,14 @@ desactiva.
 
 ### `locos`
 
-Lista de locos con nombre. Aparecen siempre en la pestaña Mando y su nombre
-se puede usar directamente en los scripts sin definirlo con `loco`.
+Registro de locomotoras (se gestiona más cómodo desde el puesto de mando).
+Aparecen siempre en la lista y su `name` se puede usar directamente en los
+scripts sin definirlo con `loco`.
 
 | Campo | Descripción |
 |---|---|
-| `name` | Nombre (minúsculas, números, `_` y `-`). |
+| `name` | Nombre para los scripts (minúsculas, números, `_` y `-`). |
+| `label` | Nombre para mostrar en el puesto de mando (texto libre, opcional). |
 | `loco` | Dirección: `mm2:24`, `dcc:3`, `mfx:5` (para mfx, el SID que le asignó la MS2; mueve la loco con la MS2 y mira la pestaña Mando para verlo). |
 
 ### `sensors`

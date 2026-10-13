@@ -63,26 +63,47 @@ async function openLayout(name, quiet) {
 }
 
 // ---- Dibujo ----
+// El plano se dibuja en todas las vistas: #plan (pestaña Maqueta, donde se
+// asignan desvíos y sensores) y #deskPlan (puesto de mando, con zoom).
+const planViews = () => [...document.querySelectorAll("svg.planview")];
+const ZOOM = { base: null, cur: null };
+
 function drawPlan() {
-  const svg = $("#plan"), L = PLAN.L;
-  $("#planEmpty").style.display = L ? "none" : "block";
-  svg.style.display = L ? "block" : "none";
-  $("#planTitle").textContent = L ? L.name || PLAN.name : "";
-  if (!L) return (svg.innerHTML = "");
-  const b = CT.bounds(L.pieces), m = 90;
-  svg.setAttribute("viewBox", `${b.x - m} ${b.y - m} ${b.w + 2 * m} ${b.h + 2 * m}`);
-  let html = "", labels = "";
-  for (const p of L.pieces) {
-    const P = CT.paths(p), sw = CT.isSwitch(p.t), elev = (p.z || []).some((z) => z > 0);
-    html += `<g class="pc${sw ? " sw" : ""}${elev ? " elev" : ""}" data-id="${p.id}"><path class="bed" d="${P.map(pathD).join("")}"/>`;
-    P.forEach((pts, k) => (html += `<path class="rt" data-k="${k}" d="${pathD(pts)}"/>`));
-    html += "</g>";
-    const T = turnoutOf(p.id), S = sensorOf(p.id), [cx, cy] = CT.center(p);
-    if (T) labels += `<text x="${cx.toFixed(0)}" y="${(cy - 48).toFixed(0)}">${esc(T.name || "?")}${T.addr ? " · " + esc(accRef(T.addr)) : ""}</text>`;
-    if (S) labels += `<text class="st" x="${cx.toFixed(0)}" y="${(cy + 70).toFixed(0)}">S${S.id}${S.name ? " " + esc(S.name) : ""}</text>`;
+  const L = PLAN.L;
+  document.querySelectorAll(".planEmpty").forEach((e) => (e.style.display = L ? "none" : "block"));
+  document.querySelectorAll(".planTitle").forEach((e) => (e.textContent = L ? L.name || PLAN.name : ""));
+  let html = "", labels = "", fs = 44;
+  if (L) {
+    // Letra proporcional al tamaño de la maqueta para que se lea siempre.
+    const bb = CT.bounds(L.pieces);
+    fs = Math.round(Math.min(130, Math.max(44, Math.max(bb.w, bb.h) / 40)));
+    for (const p of L.pieces) {
+      const P = CT.paths(p), sw = CT.isSwitch(p.t), elev = (p.z || []).some((z) => z > 0);
+      html += `<g class="pc${sw ? " sw" : ""}${elev ? " elev" : ""}" data-id="${p.id}"><path class="bed" d="${P.map(pathD).join("")}"/>`;
+      P.forEach((pts, k) => (html += `<path class="rt" data-k="${k}" d="${pathD(pts)}"/>`));
+      html += "</g>";
+      const T = turnoutOf(p.id), S = sensorOf(p.id), [cx, cy] = CT.center(p);
+      if (T) labels += `<text x="${cx.toFixed(0)}" y="${(cy - fs * 1.1).toFixed(0)}">${esc(T.name || "?")}${T.addr ? " · " + esc(accRef(T.addr)) : ""}</text>`;
+      if (S) labels += `<text class="st" x="${cx.toFixed(0)}" y="${(cy + fs * 1.6).toFixed(0)}">S${S.id}${S.name ? " " + esc(S.name) : ""}</text>`;
+    }
+    const b = CT.bounds(L.pieces), m = Math.max(90, fs * 2.6);
+    ZOOM.base = { x: b.x - m, y: b.y - m, w: b.w + 2 * m, h: b.h + 2 * m };
+    if (!ZOOM.cur || ZOOM.layout !== PLAN.name) ZOOM.cur = { ...ZOOM.base };
+    ZOOM.layout = PLAN.name;
   }
-  svg.innerHTML = html + labels;
-  svg.classList.toggle("editing", PLAN.edit);
+  for (const svg of planViews()) {
+    svg.style.display = L ? "block" : "none";
+    if (!L) {
+      svg.innerHTML = "";
+      continue;
+    }
+    const v = svg.id === "deskPlan" ? ZOOM.cur : ZOOM.base;
+    svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
+    svg.innerHTML = html + labels;
+    svg.classList.toggle("editing", svg.id === "plan" && PLAN.edit);
+    svg.style.setProperty("--fs", fs + "px");
+  }
+  renderTurnoutChips();
   updatePlanState();
 }
 
@@ -109,10 +130,9 @@ function activeRoutes(p, T) {
 
 function updatePlanState() {
   if (!PLAN.L) return;
-  const svg = $("#plan");
-  for (const g of svg.querySelectorAll("g.pc")) {
+  for (const g of document.querySelectorAll("svg.planview g.pc")) {
     const id = +g.dataset.id, p = pieceById(id), T = turnoutOf(id), S = sensorOf(id);
-    g.classList.toggle("selp", PLAN.edit && PLAN.sel === id);
+    g.classList.toggle("selp", g.ownerSVGElement.id === "plan" && PLAN.edit && PLAN.sel === id);
     g.classList.toggle("sens", !!S);
     const st = S ? (state.sensors || []).find((x) => x.id === S.id) : null;
     g.classList.toggle("s1", !!(st && st.state === 1));
@@ -125,13 +145,37 @@ function updatePlanState() {
       });
     }
   }
+  updateTurnoutChips();
 }
 
-$("#plan").addEventListener("click", (e) => {
+// Botones con los desvíos de la maqueta (acceso rápido en el puesto de mando).
+function renderTurnoutChips() {
+  const box = $("#deskTurnouts");
+  if (!box) return;
+  const list = PLAN.L ? PLAN.L.marklin.turnouts.filter((t) => t.addr && pieceById(t.piece)) : [];
+  box.innerHTML = list.map((t) => `<button class="chip" data-piece="${t.piece}" title="${esc(accRef(t.addr))}"><b>${esc(t.name)}</b> <span></span></button>`).join("");
+  box.querySelectorAll(".chip").forEach((b) => (b.onclick = () => {
+    const p = pieceById(+b.dataset.piece);
+    throwSwitch(p, turnoutOf(p.id));
+  }));
+}
+function updateTurnoutChips() {
+  document.querySelectorAll("#deskTurnouts .chip").forEach((b) => {
+    const p = pieceById(+b.dataset.piece), T = turnoutOf(+b.dataset.piece);
+    if (!p || !T) return;
+    const act = activeRoutes(p, T), kind = CT.LIB[p.t].kind;
+    let txt = "?";
+    if (act) txt = kind === "threeway" ? ["recto", "izquierda", "derecha"][act[0]] : act.includes(0) ? "recto" : "desviado";
+    b.querySelector("span").textContent = txt;
+    b.classList.toggle("dv", !!act && !act.includes(0));
+  });
+}
+
+function planClick(e, svg) {
   const g = e.target.closest("g.pc");
-  if (!g || !PLAN.L) return;
+  if (!g || !PLAN.L || svg._panned) return;
   const id = +g.dataset.id;
-  if (PLAN.edit) {
+  if (svg.id === "plan" && PLAN.edit) {
     PLAN.sel = id;
     renderEdit();
     updatePlanState();
@@ -140,9 +184,65 @@ $("#plan").addEventListener("click", (e) => {
   const p = pieceById(id);
   if (!CT.isSwitch(p.t)) return;
   const T = turnoutOf(id);
-  if (!T || !T.addr) return toast('Este desvío aún no tiene dirección: pulsa "Asignar desvíos y sensores".', true);
+  if (!T || !T.addr) return toast('Este desvío aún no tiene dirección: asígnasela en la pestaña Maqueta.', true);
   throwSwitch(p, T);
-});
+}
+planViews().forEach((svg) => svg.addEventListener("click", (e) => planClick(e, svg)));
+
+// Zoom (rueda) y desplazamiento (arrastrar) en el plano del puesto de mando.
+(function () {
+  const svg = $("#deskPlan");
+  if (!svg) return;
+  const apply = () => svg.setAttribute("viewBox", `${ZOOM.cur.x} ${ZOOM.cur.y} ${ZOOM.cur.w} ${ZOOM.cur.h}`);
+  const toUser = (cx, cy) => {
+    const pt = svg.createSVGPoint();
+    pt.x = cx;
+    pt.y = cy;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  };
+  window.zoomPlan = (f, cx, cy) => {
+    if (!ZOOM.cur) return;
+    const r = svg.getBoundingClientRect();
+    const p = toUser(cx == null ? r.left + r.width / 2 : cx, cy == null ? r.top + r.height / 2 : cy);
+    const v = ZOOM.cur, nw = Math.min(ZOOM.base.w * 2, Math.max(ZOOM.base.w / 12, v.w * f));
+    const k = nw / v.w;
+    ZOOM.cur = { x: p.x - (p.x - v.x) * k, y: p.y - (p.y - v.y) * k, w: v.w * k, h: v.h * k };
+    apply();
+  };
+  window.fitPlan = () => {
+    if (!ZOOM.base) return;
+    ZOOM.cur = { ...ZOOM.base };
+    apply();
+  };
+  svg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    zoomPlan(e.deltaY > 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY);
+  }, { passive: false });
+  let drag = null;
+  svg.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || !ZOOM.cur) return;
+    drag = { x: e.clientX, y: e.clientY, v: { ...ZOOM.cur }, s: 1 / svg.getScreenCTM().a, id: e.pointerId };
+    svg._panned = false;
+  });
+  svg.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!svg._panned && Math.hypot(dx, dy) < 5) return;
+    if (!svg._panned) svg.setPointerCapture(drag.id);
+    svg._panned = true;
+    ZOOM.cur = { ...drag.v, x: drag.v.x - dx * drag.s, y: drag.v.y - dy * drag.s };
+    apply();
+  });
+  const end = () => {
+    drag = null;
+    setTimeout(() => (svg._panned = false), 0);
+  };
+  svg.addEventListener("pointerup", end);
+  svg.addEventListener("pointercancel", end);
+  svg.addEventListener("dblclick", (e) => {
+    if (!e.target.closest("g.sw")) fitPlan();
+  });
+})();
 
 function sendPos(ref, pos, T) {
   return post("/api/accessory", { addr: accRef(ref), pos: T.invert ? (pos ? 0 : 1) : pos });

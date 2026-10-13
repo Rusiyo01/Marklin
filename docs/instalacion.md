@@ -51,9 +51,9 @@ Ver el README (PlatformIO o IDE de Arduino).
 
 ## Primer arranque
 
-1. Con el móvil, conéctate a la WiFi **`Marklin-ESP32`** (contraseña
-   `marklin123`). La aplicación **se abre sola** (portal cautivo); si no,
-   abre **http://192.168.4.1**. Si el móvil avisa de que "la red no tiene
+1. Desde el portátil o el móvil, conéctate a la WiFi **`Marklin-ESP32`**
+   (contraseña `marklin123`) y abre **http://192.168.4.1** (en el móvil se
+   abre sola). Si el móvil avisa de que "la red no tiene
    Internet", elige **mantener la conexión**.
 2. El **asistente** te guía:
    1. **Conexión**: comprueba el bus CAN y busca la Gleisbox y la MS2.
@@ -61,11 +61,13 @@ Ver el README (PlatformIO o IDE de Arduino).
       con su dirección); dales un nombre corto.
    3. **Maqueta**: elige una de ejemplo o sube la tuya de C-Track Planner
       ([maquetas.md](maquetas.md)).
-   4. **WiFi**: sigue con la red propia del ESP32 o únelo a tu WiFi de casa
-      (entonces se abre con **http://marklin.local**).
+   4. **WiFi**: únelo a tu WiFi de casa (recomendado para el portátil: se
+      abre con **http://marklin.local** y no pierdes Internet) o sigue con la
+      red propia del ESP32.
    5. **Listo**: crea un script de prueba con tu primera loco.
-3. Para usarla como una app: en el menú del navegador del móvil elige
-   **Añadir a pantalla de inicio**.
+3. Para usarla como una app: en el portátil, Chrome/Edge → **Crear acceso
+   directo… → Abrir como ventana**; en el móvil, **Añadir a pantalla de
+   inicio**. Su uso está en [puesto-de-mando.md](puesto-de-mando.md).
 
 El asistente se puede volver a abrir en **Ajustes → Asistente de
 configuración**.

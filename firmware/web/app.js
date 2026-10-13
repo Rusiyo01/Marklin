@@ -1,7 +1,7 @@
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const kcls=k=>({'can<':'rx','can>':'tx'}[k]||k);
-let state={},logSeq=0,logLines=[],tab='mando',dragging={};
+let state={},logSeq=0,logLines=[],tab='desk',layoutsLoaded=false;
 
 function toast(t,bad){const e=$('#toast');e.textContent=t;e.style.display='block';e.style.color=bad?'#ff7b72':'#fff';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
 async function api(path,opt){
@@ -24,50 +24,6 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   if(tab=='maq')loadLayouts();
   if(tab=='cfg'&&!$('#cfgText').value)loadCfg();
 });
-
-// ---- Mando ----
-function addLoco(){const v=$('#newLoco').value.trim();if(v)post('/api/loco',{loco:v,add:1}).then(()=>$('#newLoco').value='')}
-function locoCard(l){
-  const d=document.createElement('div');d.className='panel loco';d.dataset.ref=l.ref;
-  let fns='';for(let i=0;i<16;i++)fns+=`<button data-fn="${i}">F${i}</button>`;
-  d.innerHTML=`<div class="row"><div><div class="name"></div><div class="ref">${esc(l.ref)} <button class="link" data-n title="Guardar un nombre para esta loco">✎ nombre</button></div></div><span class="sp"></span><div class="spd">0</div></div>
-  <input type="range" min="0" max="1000" step="10" value="0">
-  <div class="row"><button data-d="rev">◀ Atrás</button><button data-s="0">■ Parar</button><button data-d="fwd">Adelante ▶</button><span class="sp"></span><span class="dir"></span></div>
-  <div class="fns">${fns}</div>`;
-  const rng=d.querySelector('input');let timer=null;
-  const send=()=>{timer=null;post('/api/loco',{loco:l.ref,speed:rng.value}).catch(()=>{})};
-  rng.oninput=()=>{dragging[l.ref]=Date.now();d.querySelector('.spd').textContent=Math.round(rng.value/10)+'%';if(!timer)timer=setTimeout(send,150)};
-  rng.onchange=()=>{dragging[l.ref]=Date.now();if(timer){clearTimeout(timer)}send()};
-  d.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>post('/api/loco',{loco:l.ref,dir:b.dataset.d}));
-  d.querySelector('[data-s]').onclick=()=>post('/api/loco',{loco:l.ref,speed:0});
-  d.querySelector('[data-n]').onclick=()=>{
-    const cur=state.locos.find(x=>x.ref==l.ref);
-    const n=prompt('Nombre para '+l.ref+' (se usa en los scripts; vacío = quitar):',cur&&cur.name||'');
-    if(n!==null)post('/api/loconame',{loco:l.ref,name:n.trim()?slug(n):''}).catch(()=>{});
-  };
-  d.querySelectorAll('[data-fn]').forEach(b=>b.onclick=()=>{
-    const cur=state.locos.find(x=>x.ref==l.ref);const on=cur&&(cur.fn>>>b.dataset.fn)&1;
-    post('/api/loco',{loco:l.ref,fn:b.dataset.fn,on:on?0:1});
-  });
-  return d;
-}
-function renderLocos(){
-  const box=$('#locos');const seen=new Set();
-  for(const l of state.locos){
-    seen.add(l.ref);
-    let d=box.querySelector(`[data-ref="${CSS.escape(l.ref)}"]`);
-    if(!d){d=locoCard(l);box.appendChild(d)}
-    d.querySelector('.name').textContent=l.name||'Loco '+l.ref;
-    if(!(Date.now()-(dragging[l.ref]||0)<1500)){
-      d.querySelector('input').value=l.speed;
-      d.querySelector('.spd').textContent=Math.round(l.speed/10)+'%';
-    }
-    d.querySelector('.dir').textContent=l.dir==1?'sentido: adelante':l.dir==2?'sentido: atrás':'sentido: ?';
-    d.querySelectorAll('[data-fn]').forEach(b=>b.classList.toggle('act',((l.fn>>>b.dataset.fn)&1)==1));
-  }
-  box.querySelectorAll('.loco').forEach(d=>{if(!seen.has(d.dataset.ref))d.remove()});
-  $('#noLocos').style.display=state.locos.length?'none':'block';
-}
 
 // ---- Automático ----
 async function loadScripts(){
@@ -163,8 +119,9 @@ async function refresh(){
     const p=$('#power');p.textContent=state.overload?'¡SOBRECARGA!':'vía: '+(state.power=='on'?'ON':state.power=='off'?'OFF':'?');
     p.className='badge '+(state.power=='on'?'on':state.power=='off'?'off':'');
     $('#ms2').textContent='MS2: '+(state.ms2?'sí':'no');
-    renderLocos();renderRunners();renderSensors();renderAccs();renderInfo();
-    if(tab=='maq')updatePlanState();
+    renderDesk();renderRunners();renderSensors();renderAccs();renderInfo();
+    if(!layoutsLoaded){layoutsLoaded=true;loadLayouts()}
+    updatePlanState();
     if(state.logSeq!=logSeq)pollLog();
     let later=false;try{later=sessionStorage.getItem('wizLater')=='1'}catch(e){}
     if(!state.setupDone&&!WZ.open&&!WZ.done&&!later)openWizard();

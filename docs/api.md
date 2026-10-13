@@ -55,7 +55,7 @@ solo se usa para scripts, órdenes y configuración.
 | Método y ruta | Descripción |
 |---|---|
 | `POST /api/setup` | Asistente: cuerpo `{"locos":[{"name","loco"}], "layout":"...", "wifi":{"mode","ssid","password"}}`. Responde `restart: true` si cambia la WiFi. |
-| `POST /api/loconame?loco=mm2:24&name=x` | Guarda (o borra, con `name` vacío) el nombre de una loco. |
+| `POST /api/locoreg?loco=mm2:24&name=cocodrilo&label=Cocodrilo%20SBB` | Registra o edita una loco (`old=` con la dirección anterior si cambia; `delete=1` para quitarla). |
 | `GET /api/config` | Configuración actual (JSON). |
 | `POST /api/config` | Valida, guarda y reinicia. Cuerpo: JSON (ver [configuracion.md](configuracion.md)). |
 | `POST /api/restart` | Reinicia el ESP32. |

@@ -11,7 +11,8 @@
 #endif
 
 struct LocoConfig {
-  std::string name;  // alias en minúsculas, usable en los scripts
+  std::string name;   // alias en minúsculas, usable en los scripts
+  std::string label;  // nombre para mostrar (libre: "Cocodrilo SBB")
   uint32_t uid = 0;
 };
 

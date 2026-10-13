@@ -8,7 +8,7 @@ function openWizard() {
   WZ.open = true;
   WZ.step = 0;
   WZ.done = false;
-  WZ.locos = (state.locos || []).map((l) => ({ ref: l.ref, name: l.name || "" }));
+  WZ.locos = (state.locos || []).map((l) => ({ ref: l.ref, name: l.label || l.name || "" }));
   WZ.layout = state.layout || "";
   WZ.wifi.mode = state.wifi && state.wifi.mode === "sta" ? "sta" : "ap";
   $("#wizard").hidden = false;
@@ -39,7 +39,7 @@ function wzLayoutsChanged(name) {
 function wzTick() {
   if (!WZ.open || WZ.done) return;
   for (const l of state.locos || [])
-    if (!WZ.removed.has(l.ref) && !WZ.locos.some((x) => x.ref === l.ref)) WZ.locos.push({ ref: l.ref, name: l.name || "" });
+    if (!WZ.removed.has(l.ref) && !WZ.locos.some((x) => x.ref === l.ref)) WZ.locos.push({ ref: l.ref, name: l.label || l.name || "" });
   if (WZ.step === 0) wzRender();
   if (WZ.step === 1) wzRenderLocoList();
 }
@@ -61,7 +61,7 @@ function wzRender() {
     const gb = dev.some((d) => d.type === "Gleisbox");
     const canOk = c.state === "ok" && !(c.tec >= 128);
     b.innerHTML = `<h2>¡Bienvenido!</h2>
-      <p>Este asistente deja el sistema listo en un minuto. Primero comprobamos la conexión con la Gleisbox
+      <p>Este asistente deja el sistema listo en un minuto (desde el portátil o el móvil). Primero comprobamos la conexión con la Gleisbox
       (enciéndela y, si la tienes, conecta también la MS2).</p>
       ${wzCheck(canOk, "Bus CAN funcionando", "Revisa el cableado CAN-H / CAN-L / GND (ver docs/hardware.md). Puedes seguir y revisarlo luego.")}
       ${wzCheck(gb, "Gleisbox encontrada", 'Pulsa "Buscar equipos". Si no aparece, revisa el cable y que la Gleisbox esté enchufada.')}
@@ -70,7 +70,7 @@ function wzRender() {
   } else if (s === 1) {
     b.innerHTML = `<h2>Tus locomotoras</h2>
       <p>Mueve cada loco un momento con la MS2 y aparecerá aquí sola. También puedes añadirlas con su dirección.
-      Ponles un nombre corto: lo usarás en los scripts.</p>
+      Ponles el nombre que quieras (p. ej. "Cocodrilo SBB").</p>
       <div id="wzLocoList"></div>
       <div class="row" style="margin-top:10px">
         <select id="wzProto"><option value="mm2">MM2</option><option value="dcc">DCC</option><option value="mfx">mfx (SID)</option></select>
@@ -90,9 +90,9 @@ function wzRender() {
     const w = WZ.wifi;
     b.innerHTML = `<h2>Red WiFi</h2>
       <label class="opt"><input type="radio" name="wzW" value="ap"${w.mode === "ap" ? " checked" : ""}> <span><b>Red propia del ESP32</b>
-        <span class="dir"> Conecta el móvil a «${esc((state.wifi && state.wifi.apSsid) || "Marklin-ESP32")}». Lo más sencillo.</span></span></label>
+        <span class="dir"> Conecta el portátil o el móvil a «${esc((state.wifi && state.wifi.apSsid) || "Marklin-ESP32")}». Ese dispositivo no tendrá Internet mientras tanto.</span></span></label>
       <label class="opt"><input type="radio" name="wzW" value="sta"${w.mode === "sta" ? " checked" : ""}> <span><b>Mi WiFi de casa</b>
-        <span class="dir"> El ESP32 se une a tu red y lo abres con http://marklin.local desde cualquier dispositivo de casa.</span></span></label>
+        <span class="dir"> Recomendado para el portátil: el ESP32 se une a tu red, sigues con Internet y lo abres con http://marklin.local desde el portátil o el móvil.</span></span></label>
       <div id="wzSta" class="row" style="margin-top:8px"${w.mode === "sta" ? "" : " hidden"}>
         <input id="wzSsid" placeholder="Nombre de la red" value="${esc(w.ssid)}">
         <input id="wzPass" type="password" placeholder="Contraseña" value="${esc(w.password)}"></div>`;
@@ -163,7 +163,7 @@ async function wzNext() {
     let n = wzName(l), k = 2;
     while (used.has(n)) n = wzName(l).slice(0, 28) + "_" + k++;
     used.add(n);
-    locos.push({ name: n, loco: l.ref });
+    locos.push(Object.assign({ name: n, loco: l.ref }, l.name.trim() ? { label: l.name.trim() } : {}));
   }
   try {
     if (WZ.test && locos.length) {
@@ -184,8 +184,9 @@ async function wzNext() {
         <p class="dir">Si no consigue conectarse en 15 segundos, volverá a crear su propia red «Marklin-ESP32».</p>`;
     } else {
       $("#wzBody").innerHTML = `<h2>¡Configurado!</h2>
-        <p>Pulsa <b>GO</b> arriba para dar corriente a la vía y prueba tus locos en <b>Mando</b>.
-        En <b>Maqueta</b> puedes asignar los desvíos y sensores; los scripts de ejemplo están en <b>Automático</b>.</p>
+        <p>Pulsa <b>GO</b> arriba para dar corriente a la vía. En el <b>Puesto de mando</b> tienes tus locos a la izquierda:
+        haz clic en una para llevarla a un mando (puedes abrir hasta 4 a la vez) y toca los desvíos en el plano.
+        En <b>Maqueta</b> asignas desvíos y sensores; los scripts de ejemplo están en <b>Automático</b>.</p>
         <div class="row"><span class="sp"></span><button class="act" onclick="closeWizard();refresh()">Empezar</button></div>`;
       if (typeof loadLayouts === "function") loadLayouts();
     }

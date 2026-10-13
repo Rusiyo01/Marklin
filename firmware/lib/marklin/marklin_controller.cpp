@@ -258,7 +258,7 @@ void Controller::setLocoName(uint32_t uid, const char* name) {
   if (!l) return;
   strncpy(l->name, name ? name : "", sizeof(l->name) - 1);
   l->name[sizeof(l->name) - 1] = 0;
-  l->pinned = true;
+  l->pinned = l->name[0] != 0;  // las locos registradas no se reciclan
 }
 
 void Controller::applyLocoSpeed(uint32_t uid, uint16_t speed) {

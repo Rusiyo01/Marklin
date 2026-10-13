@@ -35,7 +35,8 @@ a{color:var(--blue)}
   <div><h1>Märklin ESP32</h1><div class="ver">Control automático de trenes Märklin · versión <b id="ver">__VERSION__</b></div></div>
 </header>
 <p>Convierte un ESP32 en el cerebro de tu maqueta: se conecta al bus CAN de la Gleisbox de la Mobile Station 2 y
-mueve tus trenes de forma automática. Se instala desde aquí en un minuto, ya preconfigurado: red WiFi propia,
+mueve tus trenes de forma automática. Se maneja desde el portátil (plano de la maqueta, tus locomotoras
+y hasta 4 mandos a la vez) o desde el móvil. Se instala desde aquí en un minuto, ya preconfigurado: red WiFi propia,
 scripts y maquetas de ejemplo y un asistente que te guía la primera vez.</p>
 
 <div class="card">
@@ -61,10 +62,12 @@ scripts y maquetas de ejemplo y un asistente que te guía la primera vez.</p>
 <div class="card">
   <h2 style="margin-top:0">2. Primera puesta en marcha</h2>
   <ol>
-    <li>Con el móvil, conéctate a la red WiFi <b>Marklin-ESP32</b> (contraseña <code>marklin123</code>).
-      La aplicación se abre sola; si no, abre <b>http://192.168.4.1</b>.</li>
-    <li>Sigue el <b>asistente</b>: comprueba la conexión con la Gleisbox, recoge tus locos, elige tu maqueta y tu WiFi.</li>
-    <li>Para tenerla como una app más: en el menú del navegador elige <b>Añadir a pantalla de inicio</b>.</li>
+    <li>Desde el portátil (o el móvil) conéctate a la red WiFi <b>Marklin-ESP32</b> (contraseña <code>marklin123</code>)
+      y abre <b>http://192.168.4.1</b>.</li>
+    <li>Sigue el <b>asistente</b>: comprueba la Gleisbox, registra tus locos, elige tu maqueta y une el ESP32 a tu
+      WiFi de casa; desde entonces la abres en <b>http://marklin.local</b>.</li>
+    <li>El <b>Puesto de mando</b> muestra el plano con los desvíos, tus locomotoras y de 1 a 4 mandos a la vez.
+      Para tenerlo como app de escritorio: Chrome → <i>Crear acceso directo → Abrir como ventana</i>.</li>
   </ol>
   <p class="dim">Puedes subir tus maquetas de <b>C-Track Planner</b> (archivo .json o la app sin conexión .html) desde la
   pestaña <i>Maqueta</i>; allí asignas a cada desvío su dirección y a cada pieza su sensor.</p>
