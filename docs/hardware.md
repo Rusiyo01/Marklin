@@ -33,6 +33,21 @@ necesitas **CAN-H, CAN-L y GND**. Opciones, de menos a más invasiva:
 3. **Derivar del cable de la MS2** (cortar e intercalar un conector). Es lo
    más arriesgado para la MS2; solo si sabes lo que haces.
 
+### Caso recomendado: Gleisbox con dos tomas para MS2 (p. ej. 60116)
+
+La MS2 se queda en una toma y el ESP32 va en la otra; no hay que abrir nada.
+
+1. Consigue un **cable de conexión de MS2 de repuesto** (el conector de 10
+   polos no se vende suelto) y córtalo dejando el conector con 30–50 cm de
+   cable.
+2. Pela los hilos del extremo cortado **sin que se toquen entre sí** y
+   enchufa el conector en la toma libre, con la Gleisbox encendida y la MS2
+   en la otra toma.
+3. Identifica los hilos con el multímetro (sección 3), midiendo en los
+   hilos en vez de en las patillas: el de ~18 V, GND, CAN-H y CAN-L.
+4. Aísla con cinta o termorretráctil el hilo de ~18 V y los que no uses.
+   Une CAN-H, CAN-L y GND al módulo SN65HVD230 (sección 4).
+
 En todos los casos **no conectes nunca la patilla de alimentación (~18 V)**
 al circuito del ESP32 (salvo a la entrada de un convertidor reductor, ver
 sección 5).
