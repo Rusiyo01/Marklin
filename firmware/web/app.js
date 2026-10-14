@@ -102,7 +102,9 @@ async function saveCfg(){
 }
 function renderInfo(){
   const c=state.can,w=state.wifi;
-  const kv=[['WiFi',w.mode=='sta'?'conectado a la red (RSSI '+w.rssi+' dBm)':'punto de acceso propio'],['IP',w.ip],
+  const kv=[['WiFi de casa',w.mode!='sta'?'no configurada (solo red propia)':w.connected?'conectado a «'+w.ssid+'» (señal '+w.rssi+' dBm)':'NO conectado a «'+w.ssid+'»: revisa la contraseña y que sea de 2,4 GHz'],
+    ['Abrir desde casa',w.connected?'http://'+w.ip+'  ó  http://'+w.hostname+'.local':'—'],
+    ['Red propia','«'+w.apSsid+'» → http://'+w.apIp],
     ['CAN',c.state+' · hash '+c.hash],['Tramas',`recibidas ${c.rx} · enviadas ${c.tx} · fallos de envío ${c.txFail}`],
     ['Errores CAN',`TEC ${c.tec} · REC ${c.rec} · errores de bus ${c.busErrors}`+(c.tec>=128?' — ¡nadie confirma las tramas! revisa CAN-H/CAN-L/GND':'')],
     ['MS2',state.ms2?'detectada':'no detectada'],['Maqueta activa',state.layout||'ninguna'],['Memoria libre',state.heap+' bytes'],

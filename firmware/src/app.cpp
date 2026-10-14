@@ -161,29 +161,29 @@ void setupWifi() {
   WiFi.persistent(false);
   WiFi.setHostname(config.hostname.c_str());
   bool connected = false;
+  // La red propia del ESP32 queda SIEMPRE activa (también unido a la WiFi de
+  // casa): así siempre se puede entrar por 192.168.4.1 y ver en Ajustes la
+  // IP que tiene en casa, aunque marklin.local no funcione en ese equipo.
+  WiFi.mode(config.wifiMode == "sta" ? WIFI_AP_STA : WIFI_AP);
+  WiFi.softAP(config.apSsid.c_str(), config.apPassword.empty() ? nullptr : config.apPassword.c_str());
+  eventLog.addf(LogKind::Info, "WiFi: red propia '%s', IP %s", config.apSsid.c_str(),
+                WiFi.softAPIP().toString().c_str());
+  // Portal cautivo: en la red propia cualquier dirección lleva a la interfaz.
+  captivePortal = dnsServer.start(53, "*", WiFi.softAPIP());
   if (config.wifiMode == "sta") {
-    WiFi.mode(WIFI_STA);
+    WiFi.setAutoReconnect(true);
     WiFi.begin(config.staSsid.c_str(), config.staPassword.c_str());
     eventLog.addf(LogKind::Info, "WiFi: conectando a '%s'...", config.staSsid.c_str());
     const uint32_t t0 = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - t0 < 15000) delay(100);
     connected = WiFi.status() == WL_CONNECTED;
-    if (connected) {
-      WiFi.setAutoReconnect(true);
-      eventLog.addf(LogKind::Info, "WiFi: conectado, IP %s", WiFi.localIP().toString().c_str());
-    } else {
-      eventLog.add(LogKind::Error, "WiFi: no se pudo conectar, se activa el punto de acceso");
-    }
-  }
-  if (!connected) {
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(config.apSsid.c_str(),
-                config.apPassword.empty() ? nullptr : config.apPassword.c_str());
-    eventLog.addf(LogKind::Info, "WiFi: punto de acceso '%s', IP %s", config.apSsid.c_str(),
-                  WiFi.softAPIP().toString().c_str());
-    // Portal cautivo: cualquier dirección lleva a la interfaz (el móvil la
-    // abre solo al conectarse a la red del ESP32).
-    captivePortal = dnsServer.start(53, "*", WiFi.softAPIP());
+    if (connected)
+      eventLog.addf(LogKind::Info, "WiFi: conectado a '%s', IP %s", config.staSsid.c_str(),
+                    WiFi.localIP().toString().c_str());
+    else
+      eventLog.addf(LogKind::Error,
+                    "WiFi: no se pudo conectar a '%s' (sigue intentandolo; ¿contraseña? ¿red de 2,4 GHz?)",
+                    config.staSsid.c_str());
   }
   WiFi.setSleep(false);
   if (MDNS.begin(config.hostname.c_str())) {

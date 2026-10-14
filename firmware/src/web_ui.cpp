@@ -150,10 +150,14 @@ void handleState() {
   }
 
   JsonObject wifi = doc["wifi"].to<JsonObject>();
-  const bool sta = WiFi.getMode() == WIFI_STA;
-  wifi["mode"] = sta ? "sta" : "ap";
+  const bool sta = WiFi.status() == WL_CONNECTED;
+  wifi["mode"] = config.wifiMode;
+  wifi["connected"] = sta;
+  wifi["ssid"] = config.staSsid;
   wifi["apSsid"] = config.apSsid;
+  wifi["apIp"] = WiFi.softAPIP().toString();
   wifi["ip"] = sta ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
+  wifi["hostname"] = config.hostname;
   if (sta) wifi["rssi"] = WiFi.RSSI();
   doc["heap"] = ESP.getFreeHeap();
   sendJson(doc);
@@ -501,7 +505,7 @@ void redirectToApp() {
 void handleNotFound() {
   // En el punto de acceso, cualquier dominio desconocido lleva a la app.
   const String host = server.hostHeader();
-  if (isCaptivePortal() && host != WiFi.softAPIP().toString() &&
+  if (isCaptivePortal() && host != WiFi.softAPIP().toString() && host != WiFi.localIP().toString() &&
       host != String(config.hostname.c_str()) + ".local") {
     return redirectToApp();
   }

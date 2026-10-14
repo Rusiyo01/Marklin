@@ -92,7 +92,7 @@ function wzRender() {
       <label class="opt"><input type="radio" name="wzW" value="ap"${w.mode === "ap" ? " checked" : ""}> <span><b>Red propia del ESP32</b>
         <span class="dir"> Conecta el portátil o el móvil a «${esc((state.wifi && state.wifi.apSsid) || "Marklin-ESP32")}». Ese dispositivo no tendrá Internet mientras tanto.</span></span></label>
       <label class="opt"><input type="radio" name="wzW" value="sta"${w.mode === "sta" ? " checked" : ""}> <span><b>Mi WiFi de casa</b>
-        <span class="dir"> Recomendado para el portátil: el ESP32 se une a tu red, sigues con Internet y lo abres con http://marklin.local desde el portátil o el móvil.</span></span></label>
+        <span class="dir"> Recomendado para el portátil: el ESP32 se une a tu red (debe ser de 2,4 GHz), sigues con Internet y lo abres con http://marklin.local o su IP. La red propia sigue activa por si acaso.</span></span></label>
       <div id="wzSta" class="row" style="margin-top:8px"${w.mode === "sta" ? "" : " hidden"}>
         <input id="wzSsid" placeholder="Nombre de la red" value="${esc(w.ssid)}">
         <input id="wzPass" type="password" placeholder="Contraseña" value="${esc(w.password)}"></div>`;
@@ -181,7 +181,9 @@ async function wzNext() {
       $("#wzBody").innerHTML = `<h2>Conectando a «${esc(WZ.wifi.ssid)}»…</h2>
         <p>El ESP32 se reinicia y se une a tu red. Conecta este dispositivo a esa misma red y abre
         <b>http://marklin.local</b> (o busca la IP del ESP32 en tu router).</p>
-        <p class="dir">Si no consigue conectarse en 15 segundos, volverá a crear su propia red «Marklin-ESP32».</p>`;
+        <p class="dir">Si <b>marklin.local</b> no abre (pasa en algunos Windows), conéctate a la red «Marklin-ESP32»,
+        que sigue siempre activa, abre <b>http://192.168.4.1</b> y en <b>Ajustes</b> verás la IP de casa del ESP32.
+        Recuerda: el ESP32 solo funciona con redes de <b>2,4 GHz</b>.</p>`;
     } else {
       $("#wzBody").innerHTML = `<h2>¡Configurado!</h2>
         <p>Pulsa <b>GO</b> arriba para dar corriente a la vía. En el <b>Puesto de mando</b> tienes tus locos a la izquierda:

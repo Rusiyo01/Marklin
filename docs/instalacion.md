@@ -41,6 +41,19 @@ quieres borrarlo todo antes (recomendado la primera vez).
 
 Ver el README (PlatformIO o IDE de Arduino).
 
+## Si no abre http://marklin.local
+
+- La red **Marklin-ESP32** sigue **siempre activa**, aunque el ESP32 esté en
+  tu WiFi de casa. Conéctate a ella, abre **http://192.168.4.1** y en
+  **Ajustes** verás si está conectado a tu WiFi y con qué IP
+  (p. ej. `http://192.168.1.57`). Usa esa IP desde el portátil.
+- Algunos Windows no resuelven los nombres `.local`: usa la IP (también
+  aparece en la lista de dispositivos de tu router como "marklin").
+- El ESP32 **solo se conecta a redes de 2,4 GHz**. Si tu router tiene una red
+  "_5G" aparte, usa la otra. Revisa también la contraseña (mayúsculas).
+- Con el ESP32 por USB, en la página de instalación → **Logs & Console**
+  y pulsando RESET en la placa se ve la línea `WiFi: conectado a '...', IP ...`.
+
 ## Si no aparece el puerto del ESP32
 
 - Usa un cable USB **de datos** (muchos cables de carga no llevan datos).
