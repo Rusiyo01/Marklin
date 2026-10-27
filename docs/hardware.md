@@ -105,7 +105,7 @@ Anota el resultado y marca los cables.
 2. Pulsa **Buscar equipos (ping)**: deberían aparecer la **Gleisbox** y,
    si está conectada, la **MS2**.
 3. Mueve una loco con la MS2: en **Monitor** verás las tramas y la loco
-   aparecerá en **Mando**.
+   aparecerá en **Inventario → Detectadas**.
 4. Si el contador **TEC** sube a 128 o más y no aparece nada: nadie
    confirma las tramas del ESP32 → revisa CAN-H/CAN-L (¿invertidos?), GND y
    la velocidad (debe ser 250 kbit/s, ya configurada).

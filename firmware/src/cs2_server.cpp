@@ -61,11 +61,11 @@ void addArticle(cs2::Model* m, uint32_t uid, const std::string& name, const char
 }
 
 void fillModel(cs2::Model* m) {
-  for (const auto& l : config.locos) m->locos.push_back({l.label.empty() ? l.name : l.label, l.uid});
+  for (const auto& l : config.locos) m->locos.push_back({l.label.empty() ? l.name : l.label, l.uid, l.fn});
   if (m->locos.empty())
     for (int i = 0; i < controller.locoCount(); i++) {
       const uint32_t uid = controller.loco(i).uid;
-      m->locos.push_back({locoLabel(uid).c_str(), uid});
+      m->locos.push_back({locoLabel(uid).c_str(), uid, {}});
     }
 
   for (const auto& t : layouts::turnouts()) {

@@ -186,8 +186,8 @@ async function wzNext() {
         Recuerda: el ESP32 solo funciona con redes de <b>2,4 GHz</b>.</p>`;
     } else {
       $("#wzBody").innerHTML = `<h2>¡Configurado!</h2>
-        <p>Pulsa <b>GO</b> arriba para dar corriente a la vía. En el <b>Puesto de mando</b> tienes tus locos a la izquierda:
-        haz clic en una para llevarla a un mando (puedes abrir hasta 4 a la vez) y toca los desvíos en el plano.
+        <p>Pulsa <b>GO</b> arriba para dar corriente a la vía. En la pestaña <b>Locomotoras</b> tienes tus locos a la izquierda:
+        haz clic en una para llevarla a un mando (hasta 8 a la vez). Los desvíos se cambian en la pestaña <b>Desvíos</b>, y en <b>Inventario</b> añades fotos y funciones.
         En <b>Maqueta</b> asignas desvíos y sensores; los scripts de ejemplo están en <b>Automático</b>.</p>
         <div class="row"><span class="sp"></span><button class="act" onclick="closeWizard();refresh()">Empezar</button></div>`;
       if (typeof loadLayouts === "function") loadLayouts();

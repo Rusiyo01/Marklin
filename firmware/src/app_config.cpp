@@ -126,6 +126,11 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
                "' (ej. mm2:24, dcc:3, mfx:5)";
       return false;
     }
+    for (JsonVariantConst t : l["fn"].as<JsonArrayConst>()) {
+      if (lc.fn.size() >= 32) break;
+      lc.fn.push_back(static_cast<uint8_t>(t.as<unsigned>() & 0xFF));
+    }
+    lc.mfxUid = l["mfxuid"] | 0u;
     cfg.locos.push_back(lc);
   }
 
@@ -164,6 +169,7 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
     if (*name) cfg.autostart.push_back(name);
   }
 
+  cfg.autoImport = doc["autoImport"] | true;
   readStr(doc["layout"], &cfg.layout);
   cfg.setupDone = doc["setupDone"] | false;
 
@@ -201,6 +207,11 @@ String configToJson(const AppConfig& cfg) {
     char ref[24];
     marklin::formatLocoUid(l.uid, ref, sizeof(ref));
     o["loco"] = ref;
+    if (!l.fn.empty()) {
+      JsonArray fn = o["fn"].to<JsonArray>();
+      for (uint8_t t : l.fn) fn.add(t);
+    }
+    if (l.mfxUid) o["mfxuid"] = l.mfxUid;
   }
   JsonArray sensors = doc["sensors"].to<JsonArray>();
   for (const auto& s : cfg.sensors) {
@@ -214,6 +225,7 @@ String configToJson(const AppConfig& cfg) {
   JsonArray autostart = doc["autostart"].to<JsonArray>();
   for (const auto& a : cfg.autostart) autostart.add(a);
 
+  doc["autoImport"] = cfg.autoImport;
   doc["layout"] = cfg.layout;
   doc["setupDone"] = cfg.setupDone;
 

@@ -11,6 +11,7 @@
 #include "console.h"
 #include "cs2_server.h"
 #include "event_log.h"
+#include "inventory.h"
 #include "layout_store.h"
 #include "script_store.h"
 #include "web_ui.h"
@@ -115,6 +116,7 @@ void logFrame(const marklin::CanFrame& f, bool tx) {
   marklin::describeFrame(f, text, sizeof(text));
   eventLog.add(tx ? LogKind::CanTx : LogKind::CanRx, text);
   cs2server::onBusFrame(f, tx);
+  inventory::onBusFrame(f, tx);
 }
 
 void setupLocalSensors() {
@@ -286,6 +288,7 @@ void appSetup() {
   if (!loadConfig(&config, &err)) eventLog.addf(LogKind::Info, "config: %s", err.c_str());
   scripts::installDefaults();
   layouts::installDefaults();
+  inventory::setup();
 
   // UID propio derivado de la MAC (único para cada placa).
   const uint64_t mac = ESP.getEfuseMac();
@@ -322,6 +325,7 @@ void appLoop() {
   pollEstop(now);
   bootSequence(now);
   engine.tick();
+  inventory::loop(now);
   if (captivePortal) dnsServer.processNextRequest();
   webLoop();
   cs2server::loop();

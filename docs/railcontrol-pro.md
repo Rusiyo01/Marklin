@@ -27,8 +27,9 @@ hace que el ESP32 sepa hablar con ella.
    - en la WiFi de casa: la que aparece en la web del ESP32 → **Ajustes →
      iPad · RailControl Pro** (por ejemplo `192.168.1.57`).
 4. La app pide a la central su configuración y recibe:
-   - **las locomotoras registradas** en el ESP32 (con su nombre, dirección y
-     protocolo MM2, DCC o mfx);
+   - **las locomotoras del inventario** del ESP32 (con su nombre, dirección,
+     protocolo MM2, DCC o mfx y el símbolo de cada función: luces, sonido,
+     bocina...);
    - **los desvíos de la maqueta activa** (con su nombre y dirección);
    - un **plano de vías** sencillo: un panel con todos los desvíos y
      sensores para accionarlos con un toque.

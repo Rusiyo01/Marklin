@@ -16,14 +16,16 @@ async function post(path,params,body){
   catch(e){toast(e.message,true);throw e}
 }
 
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
-  tab=b.dataset.tab;
-  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('sel',x==b));
+function showTab(t){
+  tab=t;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('sel',x.dataset.tab==tab));
   document.querySelectorAll('section').forEach(s=>s.classList.toggle('sel',s.id==tab));
   if(tab=='auto')loadScripts();
   if(tab=='maq')loadLayouts();
+  if(tab=='inv')loadInventory();
   if(tab=='cfg'&&!$('#cfgText').value)loadCfg();
-});
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
 // ---- Automático ----
 async function loadScripts(){
@@ -56,7 +58,7 @@ function renderRunners(){
   ||'<tr><td colspan="5" class="dir">Ningún script en marcha</td></tr>';
 }
 
-// ---- Sensores y desvíos ----
+// ---- Sensores y desvíos por dirección ----
 function renderSensors(){
   $('#sensors').innerHTML=state.sensors.map(s=>`<div class="sensor s${s.state}" onclick="post('/api/sensor',{id:${s.id},state:${s.state==1?0:1}})">
   <b>${s.id}</b>${esc(s.name||'')}<div class="dir">${s.state==1?'ON':s.state==0?'libre':'?'}</div></div>`).join('')
@@ -129,7 +131,8 @@ async function refresh(){
     const p=$('#power');p.textContent=state.overload?'¡SOBRECARGA!':'vía: '+(state.power=='on'?'ON':state.power=='off'?'OFF':'?');
     p.className='badge '+(state.power=='on'?'on':state.power=='off'?'off':'');
     $('#ms2').textContent='MS2: '+(state.ms2?'sí':'no');
-    renderDesk();renderRunners();renderSensors();renderAccs();renderInfo();
+    if(state.inv!==INV.seq)loadInventory();
+    renderDesk();renderDetected();renderImport();renderRunners();renderSensors();renderAccs();renderInfo();
     if(!layoutsLoaded){layoutsLoaded=true;loadLayouts()}
     updatePlanState();
     if(state.logSeq!=logSeq)pollLog();

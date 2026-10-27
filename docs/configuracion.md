@@ -74,15 +74,24 @@ desactiva.
 
 ### `locos`
 
-Registro de locomotoras (se gestiona más cómodo desde el puesto de mando).
+Inventario de locomotoras (se gestiona más cómodo desde la pestaña Inventario).
 Aparecen siempre en la lista y su `name` se puede usar directamente en los
 scripts sin definirlo con `loco`.
 
 | Campo | Descripción |
 |---|---|
 | `name` | Nombre para los scripts (minúsculas, números, `_` y `-`). |
-| `label` | Nombre para mostrar en el puesto de mando (texto libre, opcional). |
-| `loco` | Dirección: `mm2:24`, `dcc:3`, `mfx:5` (para mfx, el SID que le asignó la MS2; mueve la loco con la MS2 y mira la pestaña Mando para verlo). |
+| `label` | Nombre para mostrar (texto libre, opcional). |
+| `loco` | Dirección: `mm2:24`, `dcc:3`, `mfx:5` (para mfx, el SID que le asignó la MS2; mueve la loco con la MS2 y aparecerá en Inventario → Detectadas). |
+| `fn` | Tipo de cada función F0, F1... como en la CS2/MS2 (`1` luces, `5` sonido, `10` bocina, `7` humo, `50+n` genérica Fn; `+128` = momentánea; `0` = no tiene). Opcional: se rellena al leer las locos de la MS2 o desde *Editar*. |
+| `mfxuid` | Identificador del decodificador mfx (lo copia la lectura de la MS2). |
+
+### `autoImport`
+
+`true` (por defecto): cuando la MS2 da de alta una loco mfx nueva, o se mueve
+una loco que no está en el inventario, el ESP32 lee las locos de la MS2 y
+añade las nuevas con su nombre y funciones. Ver
+[puesto-de-mando.md](puesto-de-mando.md#leer-las-locomotoras-de-la-ms2-como-una-central-station).
 
 ### `sensors`
 

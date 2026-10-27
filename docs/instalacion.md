@@ -102,6 +102,14 @@ Vuelve a instalar desde la página web (o el paquete sin conexión) **sin**
 borrar el dispositivo: se conservan la configuración, los scripts y las
 maquetas.
 
+> **Al pasar de una versión 1.3 o anterior a la 1.4 o posterior** cambia el
+> reparto de la memoria (para guardar las fotos de las locos) y **se borra lo
+> guardado**: configuración, locos registradas, scripts propios y maquetas
+> subidas. Antes de actualizar copia el texto de **Ajustes → Configuración
+> (JSON)** y guarda tus scripts y maquetas; después pega la configuración en
+> el mismo sitio y pulsa *Guardar y reiniciar*. Las locos de la MS2 se
+> pueden volver a leer con **Inventario → Leer locos de la MS2**.
+
 ## Publicar una versión nueva (para el dueño del repositorio)
 
 1. Cambia `FW_VERSION` en `firmware/src/version.h`.

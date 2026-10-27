@@ -14,6 +14,10 @@ struct LocoConfig {
   std::string name;   // alias en minúsculas, usable en los scripts
   std::string label;  // nombre para mostrar (libre: "Cocodrilo SBB")
   uint32_t uid = 0;
+  // Tipo de cada función como en la CS2/MS2 (1 = luces, 5 = sonido,
+  // 10 = bocina...; +128 = momentánea). Vacío = funciones genéricas F0..F15.
+  std::vector<uint8_t> fn;
+  uint32_t mfxUid = 0;  // identificador del decodificador mfx (si se leyó de la MS2)
 };
 
 struct SensorConfig {
@@ -47,6 +51,10 @@ struct AppConfig {
   std::vector<LocoConfig> locos;
   std::vector<SensorConfig> sensors;
   std::vector<std::string> autostart;  // scripts que arrancan solos
+
+  // Copiar a la lista de locos las que la MS2 da de alta (locos mfx nuevas
+  // en la vía) o que tenga guardadas y aún no estén registradas.
+  bool autoImport = true;
 
   std::string layout;      // maqueta activa (de C-Track Planner), "" = ninguna
   bool setupDone = false;  // el asistente de primera configuración ya se completó

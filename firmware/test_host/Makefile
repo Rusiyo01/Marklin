@@ -9,8 +9,8 @@ INCLUDES = -I../lib/marklin -I../lib/automation -I../lib/cs2 -I.
 SRCS = ../lib/marklin/marklin_can.cpp \
        ../lib/marklin/marklin_controller.cpp \
        ../lib/automation/automation.cpp \
-       ../lib/cs2/cs2_lan.cpp \
-       test_marklin.cpp test_automation.cpp test_cs2.cpp main.cpp
+       ../lib/cs2/cs2_lan.cpp ../lib/cs2/ms2_import.cpp \
+       test_marklin.cpp test_automation.cpp test_cs2.cpp test_ms2.cpp main.cpp
 
 BUILD = build
 BIN = $(BUILD)/tests

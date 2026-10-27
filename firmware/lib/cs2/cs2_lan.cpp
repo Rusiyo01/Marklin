@@ -65,7 +65,14 @@ std::vector<uint8_t> zlibStore(const std::string& data) {
 }
 
 std::vector<CanFrame> configStream(uint32_t requestId, const std::string& content) {
-  const std::vector<uint8_t> z = zlibStore(content);
+  std::vector<uint8_t> z = zlibStore(content);
+  // Algunos receptores calculan el CRC sobre (longitud + 8) & ~7 bytes: si la
+  // longitud ya es múltiplo de 8 cuentan 8 bytes de más. Un bloque "stored"
+  // vacío (5 bytes) delante evita ese caso sin cambiar el contenido.
+  if ((4 + z.size()) % 8 == 0) {
+    const uint8_t empty[5] = {0x00, 0x00, 0x00, 0xFF, 0xFF};
+    z.insert(z.begin() + 2, empty, empty + 5);
+  }
   std::vector<uint8_t> buf(4 + z.size());
   marklin::writeBe32(buf.data(), static_cast<uint32_t>(content.size()));
   memcpy(buf.data() + 4, z.data(), z.size());
@@ -160,11 +167,13 @@ std::string lokomotiveCs2(const std::vector<LocoEntry>& locos) {
     line(&s, " .tachomax=200");
     line(&s, " .vmax=255");
     line(&s, " .vmin=0");
+    if (!l.fn.empty()) functions = static_cast<int>(l.fn.size());
     for (int n = 0; n < functions; n++) {
+      const unsigned long typ = !l.fn.empty() ? l.fn[n] : n == 0 ? 1 : 50 + n;
       line(&s, " .funktionen");
       linef(&s, " ..nr=%lu", n);
-      // 1 = luces; 50 + n = símbolo genérico "Fn".
-      linef(&s, " ..typ=%lu", n == 0 ? 1 : 50 + n);
+      // 1 = luces; 50 + n = símbolo genérico "Fn"; 0x80 = momentánea.
+      if (typ) linef(&s, " ..typ=%lu", typ);
     }
   }
   return s;

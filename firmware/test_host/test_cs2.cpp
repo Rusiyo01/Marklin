@@ -60,9 +60,9 @@ CanFrame request(const char* name, uint16_t hash) {
 bool contains(const std::string& s, const char* needle) { return s.find(needle) != std::string::npos; }
 
 void sampleModel(cs2::Model* m) {
-  m->locos.push_back({"Cocodrilo SBB", locoUid(Protocol::MM2, 24)});
-  m->locos.push_back({"BR 111", locoUid(Protocol::MFX, 5)});
-  m->locos.push_back({"Vapor", locoUid(Protocol::DCC, 3)});
+  m->locos.push_back({"Cocodrilo SBB", locoUid(Protocol::MM2, 24), {}});
+  m->locos.push_back({"BR 111", locoUid(Protocol::MFX, 5), {}});
+  m->locos.push_back({"Vapor", locoUid(Protocol::DCC, 3), {}});
   m->articles.push_back({1, "entrada", "linksweiche", false});
   m->articles.push_back({2, "salida", "rechtsweiche", true});
   m->contacts.push_back({3, "anden"});
@@ -171,7 +171,7 @@ TEST(cs2_fichero_desconocido_va_al_bus) {
 
 TEST(cs2_fichero_grande_en_muchas_tramas) {
   cs2::Model m;
-  for (int i = 1; i <= 40; i++) m.locos.push_back({"Loco " + std::to_string(i), locoUid(Protocol::DCC, i)});
+  for (int i = 1; i <= 40; i++) m.locos.push_back({"Loco " + std::to_string(i), locoUid(Protocol::DCC, i), {}});
   const std::string content = cs2::lokomotiveCs2(m.locos);
   const std::vector<CanFrame> frames = cs2::configStream(makeId(CMD_CONFIG_DATA_REQUEST, false, 0x1234), content);
   std::string back;

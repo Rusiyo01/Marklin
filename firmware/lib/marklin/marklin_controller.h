@@ -93,6 +93,8 @@ class Controller {
   // Activa la salida del accesorio y la desactiva tras `pulseMs`.
   bool switchAccessory(uint32_t accUid, uint8_t position, uint16_t pulseMs);
   bool ping();
+  // Envía una trama cualquiera (cuenta en las estadísticas y en onFrame).
+  bool sendFrame(const CanFrame& f) { return send(f); }
   bool queryLoco(uint32_t locoUid);
   // Despierta la Gleisbox (si no hay MS2) y habilita los protocolos de vía.
   bool startGleisbox(uint8_t protocolMask);

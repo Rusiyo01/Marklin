@@ -54,6 +54,7 @@ std::vector<marklin::CanFrame> configStream(uint32_t requestId, const std::strin
 struct LocoEntry {
   std::string name;
   uint32_t uid;
+  std::vector<uint8_t> fn;  // tipo de cada función (vacío = genéricas)
 };
 
 struct ArticleEntry {

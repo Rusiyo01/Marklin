@@ -30,9 +30,12 @@ el ESP32 a la Gleisbox, lee la [guía de montaje](docs/hardware.md).
 
 ## Qué hace
 
-**El portátil es el puesto de mando** (y el móvil, un mando extra): plano de
-la maqueta con los desvíos a un clic, tu lista de locomotoras registradas y
-de **1 a 4 mandos a la vez en pantalla dividida**, con atajos de teclado.
+**El portátil es el puesto de mando** (y el móvil, un mando extra), con tres
+pestañas: **Locomotoras** (de 1 a 8 a la vez, con sus funciones de luces y
+sonido con su símbolo), **Desvíos** (el plano de la maqueta con los desvíos a
+un clic y el mando de la loco que elijas) e **Inventario** (fichas con foto
+de cada loco). Las locos mfx nuevas que la MS2 da de alta **se copian solas
+al inventario** con su nombre y sus funciones, como en una Central Station.
 Ver [docs/puesto-de-mando.md](docs/puesto-de-mando.md).
 
 **Y el iPad, como con una Central Station**: el ESP32 se presenta en la red
@@ -132,8 +135,9 @@ goto inicio
    2. Copia las carpetas `firmware/lib/marklin`, `firmware/lib/automation` y `firmware/lib/cs2`
       a tu carpeta `Arduino/libraries`.
    3. Crea una carpeta de sketch `marklin_esp32` con todos los ficheros de
-      `firmware/src` y un fichero vacío `marklin_esp32.ino`.
-   4. En *Herramientas → Partition Scheme* elige **Minimal SPIFFS** y graba.
+      `firmware/src`, el fichero `firmware/partitions.csv` (reparto de la
+      memoria; el IDE lo usa solo) y un fichero vacío `marklin_esp32.ino`.
+   4. Graba (placa con 4 MB de flash o más).
    </details>
 
 3. **Conectarse**: busca la red WiFi **`Marklin-ESP32`** (contraseña
@@ -141,18 +145,18 @@ goto inicio
    y arranca el asistente de configuración.
 
 4. **Comprobar el bus**: en *Ajustes* → *Buscar equipos* deben aparecer la
-   Gleisbox (y la MS2 si está conectada). Mueve una loco con la MS2: debe
-   aparecer en *Mando*.
+   Gleisbox (y la MS2 si está conectada). Pulsa *Inventario → Leer locos de
+   la MS2*: deben aparecer tus locos.
 
-5. **Primera prueba**: en *Mando* pulsa **GO**, añade tu loco (p. ej.
-   `mm2:24`) y muévela. Después prueba el script `demo_tiempo` en
+5. **Primera prueba**: pulsa **GO**, en *Locomotoras* haz clic en una loco y
+   muévela. Después prueba el script `demo_tiempo` en
    *Automático* (cambia antes la dirección de la loco).
 
 ## Documentación
 
 | Documento | Contenido |
 |---|---|
-| [docs/puesto-de-mando.md](docs/puesto-de-mando.md) | Puesto de mando en el portátil: locomotoras registradas, 1–4 mandos, plano, teclado. |
+| [docs/puesto-de-mando.md](docs/puesto-de-mando.md) | Pestañas Locomotoras (1–8 a la vez), Desvíos e Inventario con fotos; lectura de locos de la MS2; teclado. |
 | [docs/railcontrol-pro.md](docs/railcontrol-pro.md) | iPad con RailControl Pro: el ESP32 como Central Station en la red. |
 | [docs/instalacion.md](docs/instalacion.md) | Instalación desde el navegador o sin conexión, asistente, actualizar y publicar versiones. |
 | [docs/maquetas.md](docs/maquetas.md) | Subir maquetas de C-Track Planner, asignar desvíos y sensores, ejemplos incluidos. |
@@ -181,9 +185,10 @@ docs/                     documentación
 ```
 
 La lógica del protocolo y de los scripts no depende de Arduino y se prueba
-en el PC (`make -C firmware/test_host`: 42 tests, incluidos los ejemplos, las
+en el PC (`make -C firmware/test_host`: 50 tests, incluidos los ejemplos, las
 tramas exactas que usan can2udp/Railuino para la Gleisbox y los ficheros
-y secuencias de configuración de la Central Station).
+y secuencias de configuración de la Central Station, y la lectura de
+locos de la MS2).
 
 ## Estado y limitaciones
 

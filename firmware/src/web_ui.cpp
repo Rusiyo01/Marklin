@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 #include <WebServer.h>
+#include <LittleFS.h>
 #include <WiFi.h>
 
 #include <algorithm>
@@ -9,6 +10,7 @@
 #include "app.h"
 #include "cs2_server.h"
 #include "event_log.h"
+#include "inventory.h"
 #include "layout_store.h"
 #include "script_store.h"
 #include "version.h"
@@ -71,6 +73,11 @@ void handleState() {
   doc["uptime"] = millis() / 1000;
   doc["logSeq"] = eventLog.lastSeq();
   doc["ms2"] = controller.ms2Present();
+  doc["inv"] = inventory::seq();
+  JsonObject imp = doc["imp"].to<JsonObject>();
+  imp["busy"] = inventory::importBusy();
+  imp["msg"] = inventory::importStatus();
+  imp["auto"] = config.autoImport;
 
   JsonObject can = doc["can"].to<JsonObject>();
   can["state"] = canBus.stateName();
@@ -373,6 +380,8 @@ void handleLocoReg() {
     config.locos.erase(it);
     if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
     controller.setLocoName(uid, "");
+    inventory::removePhoto(uid);
+    inventory::touch();
     return sendOk("loco eliminada del registro");
   }
   String name = server.arg("name");
@@ -403,7 +412,22 @@ void handleLocoReg() {
   it->uid = uid;
   it->name = n;
   it->label = label.c_str();
+  if (server.hasArg("fn")) {
+    // Tipos de función separados por comas: "1,5,138" (0 = sin función).
+    it->fn.clear();
+    const String list = server.arg("fn");
+    int start = 0;
+    while (start < static_cast<int>(list.length()) && it->fn.size() < 32) {
+      int end = list.indexOf(',', start);
+      if (end < 0) end = list.length();
+      it->fn.push_back(static_cast<uint8_t>(list.substring(start, end).toInt() & 0xFF));
+      start = end + 1;
+    }
+    while (!it->fn.empty() && it->fn.back() == 0) it->fn.pop_back();
+  }
   if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+  inventory::renamePhoto(oldUid, uid);
+  inventory::touch();
   if (oldUid != uid) controller.setLocoName(oldUid, "");
   controller.setLocoName(uid, n.c_str());
   controller.queryLoco(uid);
@@ -418,7 +442,23 @@ void handleSetup() {
   if (deserializeJson(in, body())) return sendError("datos no validos");
   JsonDocument cfg;
   deserializeJson(cfg, configToJson(config));
-  if (in["locos"].is<JsonArrayConst>()) cfg["locos"] = in["locos"];
+  if (in["locos"].is<JsonArrayConst>()) {
+    cfg["locos"] = in["locos"];
+    // Conserva las funciones y datos mfx de las locos que ya estaban.
+    for (JsonObject l : cfg["locos"].as<JsonArray>()) {
+      uint32_t uid;
+      if (!automation::parseLocoRef(l["loco"] | "", &uid)) continue;
+      for (const auto& c : config.locos) {
+        if (c.uid != uid) continue;
+        if (!l["label"].is<const char*>() && !c.label.empty()) l["label"] = c.label;
+        if (!c.fn.empty()) {
+          JsonArray fn = l["fn"].to<JsonArray>();
+          for (uint8_t t : c.fn) fn.add(t);
+        }
+        if (c.mfxUid) l["mfxuid"] = c.mfxUid;
+      }
+    }
+  }
   if (in["layout"].is<const char*>()) cfg["layout"] = in["layout"];
   JsonVariantConst w = in["wifi"];
   if (w["mode"].is<const char*>()) {
@@ -439,6 +479,7 @@ void handleSetup() {
   if (!saveConfigJson(json)) return sendError("no se pudo guardar", 500);
   config = parsed;
   for (const auto& l : config.locos) controller.setLocoName(l.uid, l.name.c_str());
+  inventory::touch();
   activateLayout(config.layout);
   JsonDocument d;
   d["ok"] = true;
@@ -510,6 +551,100 @@ void redirectToApp() {
   server.send(302, "text/plain", "");
 }
 
+// ---- Inventario -----------------------------------------------------------------------
+
+void handleInventory() {
+  JsonDocument doc;
+  doc["seq"] = inventory::seq();
+  doc["auto"] = config.autoImport;
+  JsonArray arr = doc["locos"].to<JsonArray>();
+  for (const auto& l : config.locos) {
+    JsonObject o = arr.add<JsonObject>();
+    char ref[24];
+    marklin::formatLocoUid(l.uid, ref, sizeof(ref));
+    o["ref"] = ref;
+    o["name"] = l.name;
+    o["label"] = l.label;
+    JsonArray fn = o["fn"].to<JsonArray>();
+    for (uint8_t t : l.fn) fn.add(t);
+    o["photo"] = inventory::hasPhoto(l.uid);
+    if (l.mfxUid) o["mfxuid"] = hex32(l.mfxUid);
+  }
+  sendJson(doc);
+}
+
+void handleMs2Import() {
+  String err;
+  if (!inventory::startImport(&err)) return sendError(err);
+  sendOk("leyendo las locos de la MS2...");
+}
+
+void handleAutoImport() {
+  config.autoImport = server.arg("on") == "1";
+  if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+  sendOk(config.autoImport ? "lectura automatica activada" : "lectura automatica desactivada");
+}
+
+// Fotos: la web las reduce (JPEG de ~30 KB) y las sube como formulario.
+File photoFile;
+String photoError;
+uint32_t photoUid = 0;
+constexpr size_t kMaxPhoto = 300 * 1024;
+
+void handlePhotoUpload() {
+  HTTPUpload& up = server.upload();
+  if (up.status == UPLOAD_FILE_START) {
+    photoError = "";
+    if (!argLoco(&photoUid)) {
+      photoError = "direccion de loco no valida";
+      return;
+    }
+    photoFile = LittleFS.open("/photos/subida.tmp", "w");
+    if (!photoFile) photoError = "no se pudo crear el fichero";
+  } else if (up.status == UPLOAD_FILE_WRITE) {
+    if (!photoFile) return;
+    if (up.totalSize > kMaxPhoto) {
+      photoError = "la foto es demasiado grande";
+      photoFile.close();
+      LittleFS.remove("/photos/subida.tmp");
+      return;
+    }
+    if (photoFile.write(up.buf, up.currentSize) != up.currentSize) photoError = "memoria llena";
+  } else if (up.status == UPLOAD_FILE_END || up.status == UPLOAD_FILE_ABORTED) {
+    if (photoFile) photoFile.close();
+    if (up.status == UPLOAD_FILE_ABORTED) photoError = "subida interrumpida";
+  }
+}
+
+void handlePhotoDone() {
+  if (photoError.length() || !LittleFS.exists("/photos/subida.tmp")) {
+    LittleFS.remove("/photos/subida.tmp");
+    return sendError(photoError.length() ? photoError : "no llego ninguna foto");
+  }
+  const String path = inventory::photoPath(photoUid);
+  LittleFS.remove(path);
+  if (!LittleFS.rename("/photos/subida.tmp", path)) return sendError("no se pudo guardar", 500);
+  inventory::touch();
+  sendOk("foto guardada");
+}
+
+void handlePhotoGet() {
+  uint32_t uid;
+  if (!argLoco(&uid)) return sendError("direccion de loco no valida");
+  File f = LittleFS.open(inventory::photoPath(uid), "r");
+  if (!f) return sendError("sin foto", 404);
+  server.sendHeader("Cache-Control", "max-age=31536000");
+  server.streamFile(f, "image/jpeg");
+  f.close();
+}
+
+void handlePhotoDelete() {
+  uint32_t uid;
+  if (!argLoco(&uid)) return sendError("direccion de loco no valida");
+  inventory::removePhoto(uid);
+  sendOk("foto quitada");
+}
+
 // Ficheros de configuración de la central, como en la CS2:
 // /config/lokomotive.cs2, magnetartikel.cs2, gleisbild.cs2, gleisbilder/<página>.cs2
 bool serveCs2Config(const String& uri) {
@@ -573,6 +708,12 @@ void webSetup() {
   server.on("/api/config", HTTP_POST, handleConfigSave);
   server.on("/api/restart", HTTP_POST, handleRestart);
   server.on("/api/locoreg", HTTP_POST, handleLocoReg);
+  server.on("/api/inventory", HTTP_GET, handleInventory);
+  server.on("/api/ms2import", HTTP_POST, handleMs2Import);
+  server.on("/api/autoimport", HTTP_POST, handleAutoImport);
+  server.on("/api/photo", HTTP_GET, handlePhotoGet);
+  server.on("/api/photo", HTTP_POST, handlePhotoDone, handlePhotoUpload);
+  server.on("/api/photo/delete", HTTP_POST, handlePhotoDelete);
   server.on("/api/setup", HTTP_POST, handleSetup);
   server.on("/api/layouts", HTTP_GET, handleLayoutList);
   server.on("/api/layout", HTTP_GET, handleLayoutGet);

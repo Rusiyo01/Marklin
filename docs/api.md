@@ -55,7 +55,13 @@ solo se usa para scripts, órdenes y configuración.
 | Método y ruta | Descripción |
 |---|---|
 | `POST /api/setup` | Asistente: cuerpo `{"locos":[{"name","loco"}], "layout":"...", "wifi":{"mode","ssid","password"}}`. Responde `restart: true` si cambia la WiFi. |
-| `POST /api/locoreg?loco=mm2:24&name=cocodrilo&label=Cocodrilo%20SBB` | Registra o edita una loco (`old=` con la dirección anterior si cambia; `delete=1` para quitarla). |
+| `POST /api/locoreg?loco=mm2:24&name=cocodrilo&label=Cocodrilo%20SBB` | Registra o edita una loco (`old=` con la dirección anterior si cambia; `delete=1` para quitarla; `fn=1,5,138` tipos de función, ver `fn` en [configuracion.md](configuracion.md)). |
+| `GET /api/inventory` | Inventario: `{seq, auto, locos:[{ref, name, label, fn, photo, mfxuid}]}`. `seq` cambia con cada modificación (también aparece como `inv` en `/api/state`). |
+| `GET /api/photo?loco=mm2:24` | Foto de la loco (JPEG). |
+| `POST /api/photo?loco=mm2:24` | Sube la foto (formulario `multipart/form-data`, campo `photo`, máx. 300 KB). |
+| `POST /api/photo/delete?loco=mm2:24` | Quita la foto. |
+| `POST /api/ms2import` | Lee las locos de la MS2 y las añade al inventario. El progreso aparece en `imp` de `/api/state`. |
+| `POST /api/autoimport?on=1` | Activa (`1`) o desactiva (`0`) la lectura automática de locos nuevas de la MS2. |
 | `GET /api/config` | Configuración actual (JSON). |
 | `POST /api/config` | Valida, guarda y reinicia. Cuerpo: JSON (ver [configuracion.md](configuracion.md)). |
 | `POST /api/restart` | Reinicia el ESP32. |
