@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "app.h"
+#include "cs2_server.h"
 #include "event_log.h"
 #include "layout_store.h"
 #include "script_store.h"
@@ -158,6 +159,12 @@ void handleState() {
   wifi["apIp"] = WiFi.softAPIP().toString();
   wifi["ip"] = sta ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
   wifi["hostname"] = config.hostname;
+
+  JsonObject lan = doc["lan"].to<JsonObject>();
+  lan["tcp"] = cs2server::tcpClients();
+  lan["udp"] = cs2server::udpPeers();
+  lan["frames"] = cs2server::framesFromApps();
+  lan["files"] = cs2server::configRequests();
   if (sta) wifi["rssi"] = WiFi.RSSI();
   doc["heap"] = ESP.getFreeHeap();
   sendJson(doc);
@@ -239,6 +246,7 @@ void handleSensor() {
   const long id = server.arg("id").toInt();
   if (id <= 0) return sendError("id de sensor no valido");
   controller.setSensor(static_cast<uint32_t>(id), server.arg("state") == "1");
+  cs2server::notifySensor(static_cast<uint32_t>(id), server.arg("state") == "1");
   eventLog.addf(LogKind::Info, "sensor %ld simulado = %s", id,
                 server.arg("state") == "1" ? "on" : "off");
   sendOk();
@@ -502,7 +510,26 @@ void redirectToApp() {
   server.send(302, "text/plain", "");
 }
 
+// Ficheros de configuración de la central, como en la CS2:
+// /config/lokomotive.cs2, magnetartikel.cs2, gleisbild.cs2, gleisbilder/<página>.cs2
+bool serveCs2Config(const String& uri) {
+  if (!uri.startsWith("/config/")) return false;
+  const String file = uri.substring(8);
+  std::string request;
+  if (file == "lokomotive.cs2") request = "loks";
+  else if (file == "magnetartikel.cs2") request = "mags";
+  else if (file == "gleisbild.cs2") request = "gbs";
+  else if (file == "fahrstrassen.cs2") request = "fs";
+  else if (file.startsWith("gleisbilder/") && file.endsWith(".cs2")) request = "gbs-0";
+  else return false;
+  std::string content;
+  if (!cs2server::configFile(request, &content)) return false;
+  server.send(200, "text/plain; charset=utf-8", content.c_str());
+  return true;
+}
+
 void handleNotFound() {
+  if (server.method() == HTTP_GET && serveCs2Config(server.uri())) return;
   // En el punto de acceso, cualquier dominio desconocido lleva a la app.
   const String host = server.hostHeader();
   if (isCaptivePortal() && host != WiFi.softAPIP().toString() && host != WiFi.localIP().toString() &&

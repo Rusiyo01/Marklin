@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "console.h"
+#include "cs2_server.h"
 #include "event_log.h"
 #include "layout_store.h"
 #include "script_store.h"
@@ -113,6 +114,7 @@ void logFrame(const marklin::CanFrame& f, bool tx) {
   char text[96];
   marklin::describeFrame(f, text, sizeof(text));
   eventLog.add(tx ? LogKind::CanTx : LogKind::CanRx, text);
+  cs2server::onBusFrame(f, tx);
 }
 
 void setupLocalSensors() {
@@ -140,6 +142,7 @@ void pollLocalSensors(uint32_t now) {
     if (s.raw != s.stable && now - s.rawSinceMs >= s.debounceMs) {
       s.stable = s.raw;
       controller.setSensor(s.id, s.stable);
+      cs2server::notifySensor(s.id, s.stable);
     }
   }
 }
@@ -302,6 +305,7 @@ void appSetup() {
 
   setupWifi();
   webSetup();
+  cs2server::setup();
   consoleSetup();
 
   bootMs = millis();
@@ -320,6 +324,7 @@ void appLoop() {
   engine.tick();
   if (captivePortal) dnsServer.processNextRequest();
   webLoop();
+  cs2server::loop();
   consoleLoop();
   if (restartAtMs && static_cast<int32_t>(now - restartAtMs) >= 0) ESP.restart();
 }

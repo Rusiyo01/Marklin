@@ -1,0 +1,336 @@
+#include "cs2_lan.h"
+
+#include <stdio.h>
+#include <string.h>
+
+namespace cs2 {
+
+using marklin::CanFrame;
+
+void encodeFrame(const CanFrame& f, uint8_t out[kFrameSize]) {
+  marklin::writeBe32(out, f.id & 0x1FFFFFFF);
+  out[4] = f.dlc;
+  memcpy(out + 5, f.data, 8);
+}
+
+bool decodeFrame(const uint8_t in[kFrameSize], CanFrame* f) {
+  if (in[4] > 8) return false;
+  f->id = marklin::readBe32(in) & 0x1FFFFFFF;
+  f->dlc = in[4];
+  memcpy(f->data, in + 5, 8);
+  return true;
+}
+
+uint16_t crcCcitt(const uint8_t* data, size_t len, uint16_t seed) {
+  uint16_t crc = seed;
+  for (size_t i = 0; i < len; i++) {
+    crc ^= static_cast<uint16_t>(data[i]) << 8;
+    for (int b = 0; b < 8; b++)
+      crc = (crc & 0x8000) ? static_cast<uint16_t>((crc << 1) ^ 0x1021) : static_cast<uint16_t>(crc << 1);
+  }
+  return crc;
+}
+
+uint32_t adler32(const uint8_t* data, size_t len) {
+  uint32_t a = 1, b = 0;
+  for (size_t i = 0; i < len; i++) {
+    a = (a + data[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return (b << 16) | a;
+}
+
+std::vector<uint8_t> zlibStore(const std::string& data) {
+  const uint8_t* p = reinterpret_cast<const uint8_t*>(data.data());
+  const size_t n = data.size();
+  std::vector<uint8_t> out;
+  out.reserve(n + n / 65535 * 5 + 11);
+  out.push_back(0x78);  // deflate, ventana de 32 KB
+  out.push_back(0x01);  // sin diccionario; (0x78 << 8 | 0x01) % 31 == 0
+  size_t pos = 0;
+  do {
+    const size_t len = n - pos > 65535 ? 65535 : n - pos;
+    const bool last = pos + len == n;
+    out.push_back(last ? 0x01 : 0x00);  // BFINAL + BTYPE=00 (stored)
+    out.push_back(len & 0xFF);
+    out.push_back(len >> 8);
+    out.push_back(~len & 0xFF);
+    out.push_back((~len >> 8) & 0xFF);
+    out.insert(out.end(), p + pos, p + pos + len);
+    pos += len;
+  } while (pos < n);
+  const uint32_t adler = adler32(p, n);
+  for (int s = 24; s >= 0; s -= 8) out.push_back((adler >> s) & 0xFF);
+  return out;
+}
+
+std::vector<CanFrame> configStream(uint32_t requestId, const std::string& content) {
+  const std::vector<uint8_t> z = zlibStore(content);
+  std::vector<uint8_t> buf(4 + z.size());
+  marklin::writeBe32(buf.data(), static_cast<uint32_t>(content.size()));
+  memcpy(buf.data() + 4, z.data(), z.size());
+  const uint32_t length = static_cast<uint32_t>(buf.size());
+  buf.resize((buf.size() + 7) / 8 * 8, 0);
+
+  const uint32_t id = (requestId & 0x1FFEFFFF & ~(0xFFu << 17)) |
+                      (static_cast<uint32_t>(marklin::CMD_CONFIG_DATA_STREAM) << 17);
+  std::vector<CanFrame> frames;
+  frames.reserve(1 + buf.size() / 8);
+  CanFrame head;
+  head.id = id;
+  head.dlc = 6;
+  marklin::writeBe32(head.data, length);
+  marklin::writeBe16(head.data + 4, crcCcitt(buf.data(), buf.size()));
+  frames.push_back(head);
+  for (size_t i = 0; i < buf.size(); i += 8) {
+    CanFrame f;
+    f.id = id;
+    f.dlc = 8;
+    memcpy(f.data, buf.data() + i, 8);
+    frames.push_back(f);
+  }
+  return frames;
+}
+
+// ---- Ficheros .cs2 -----------------------------------------------------------
+// Formato de texto de la CS2: secciones sin sangría, valores " .clave=valor"
+// y subvalores " ..clave=valor". Solo saltos de línea LF (con CR+LF algunas
+// apps no los leen).
+
+namespace {
+
+void line(std::string* s, const char* text) {
+  *s += text;
+  *s += '\n';
+}
+
+void linef(std::string* s, const char* fmt, unsigned long v) {
+  char buf[48];
+  snprintf(buf, sizeof(buf), fmt, v);
+  line(s, buf);
+}
+
+// Los nombres van en una línea: sin saltos ni caracteres de control.
+std::string clean(const std::string& in) {
+  std::string out;
+  for (char c : in) out += (static_cast<unsigned char>(c) < 0x20) ? ' ' : c;
+  return out;
+}
+
+void keyText(std::string* s, const char* key, const std::string& value) {
+  *s += key;
+  *s += clean(value);
+  *s += '\n';
+}
+
+}  // namespace
+
+std::string lokomotiveCs2(const std::vector<LocoEntry>& locos) {
+  std::string s;
+  line(&s, "[lokomotive]");
+  line(&s, "version");
+  line(&s, " .minor=3");
+  line(&s, "session");
+  line(&s, " .id=1");
+  for (const auto& l : locos) {
+    marklin::Protocol proto;
+    uint32_t address;
+    if (!marklin::decodeLocoUid(l.uid, &proto, &address)) continue;
+    line(&s, "lokomotive");
+    keyText(&s, " .name=", l.name);
+    linef(&s, " .uid=0x%lx", l.uid);
+    linef(&s, " .adresse=0x%lx", address);
+    int functions = 16;
+    switch (proto) {
+      case marklin::Protocol::MFX:
+        line(&s, " .typ=mfx");
+        linef(&s, " .sid=0x%lx", address);
+        break;
+      case marklin::Protocol::DCC:
+        line(&s, " .typ=dcc");
+        break;
+      default:
+        line(&s, " .typ=mm2_prg");
+        functions = 5;  // MM2: luz + F1..F4
+        break;
+    }
+    line(&s, " .av=6");
+    line(&s, " .bv=3");
+    line(&s, " .volume=100");
+    line(&s, " .tachomax=200");
+    line(&s, " .vmax=255");
+    line(&s, " .vmin=0");
+    for (int n = 0; n < functions; n++) {
+      line(&s, " .funktionen");
+      linef(&s, " ..nr=%lu", n);
+      // 1 = luces; 50 + n = símbolo genérico "Fn".
+      linef(&s, " ..typ=%lu", n == 0 ? 1 : 50 + n);
+    }
+  }
+  return s;
+}
+
+std::string magnetartikelCs2(const std::vector<ArticleEntry>& articles) {
+  std::string s;
+  line(&s, "[magnetartikel]");
+  line(&s, "version");
+  line(&s, " .minor=1");
+  for (const auto& a : articles) {
+    line(&s, "artikel");
+    linef(&s, " .id=%lu", a.id);
+    keyText(&s, " .name=", a.name);
+    keyText(&s, " .typ=", a.typ);
+    line(&s, " .stellung=0");
+    line(&s, " .schaltzeit=200");
+    if (!a.dcc) line(&s, " .decoder=mehr_neu");
+    line(&s, a.dcc ? " .dectyp=dcc" : " .dectyp=mm2");
+  }
+  return s;
+}
+
+std::string gleisbildCs2(const std::string& pageName) {
+  std::string s;
+  line(&s, "[gleisbild]");
+  line(&s, "version");
+  line(&s, " .major=1");
+  line(&s, "groesse");
+  line(&s, "zuletztBenutzt");
+  keyText(&s, " .name=", pageName);
+  line(&s, "seite");
+  keyText(&s, " .name=", pageName);
+  return s;
+}
+
+std::string gleisbildPageCs2(const Model& model) {
+  std::string s;
+  line(&s, "[gleisbildseite]");
+  line(&s, "version");
+  line(&s, " .major=1");
+  // Rejilla: id = fila << 8 | columna. Cuatro desvíos por fila, separados
+  // para que se lean los nombres.
+  int row = 1;
+  for (size_t i = 0; i < model.articles.size(); i++) {
+    const auto& a = model.articles[i];
+    const int x = 1 + static_cast<int>(i % 4) * 4;
+    row = 1 + static_cast<int>(i / 4) * 2;
+    line(&s, "element");
+    linef(&s, " .id=0x%lx", static_cast<unsigned long>((row << 8) | x));
+    keyText(&s, " .typ=", a.typ);
+    linef(&s, " .artikel=%lu", a.id);
+    keyText(&s, " .text=", a.name);
+  }
+  int first = model.articles.empty() ? 1 : row + 2;
+  for (size_t i = 0; i < model.contacts.size(); i++) {
+    const auto& c = model.contacts[i];
+    const int x = 1 + static_cast<int>(i % 6) * 3;
+    const int y = first + static_cast<int>(i / 6) * 2;
+    line(&s, "element");
+    linef(&s, " .id=0x%lx", static_cast<unsigned long>((y << 8) | x));
+    line(&s, " .typ=s88kontakt");
+    linef(&s, " .artikel=%lu", c.id);
+    keyText(&s, " .text=", c.name.empty() ? std::to_string(c.id) : c.name);
+  }
+  return s;
+}
+
+namespace {
+
+std::string stateFile(const char* section, const char* version) {
+  std::string s;
+  line(&s, section);
+  line(&s, "version");
+  line(&s, version);
+  return s;
+}
+
+}  // namespace
+
+bool configFile(const std::string& request, const Model& model, std::string* content) {
+  if (request == "loks") {
+    *content = lokomotiveCs2(model.locos);
+  } else if (request == "mags") {
+    *content = magnetartikelCs2(model.articles);
+  } else if (request == "gbs") {
+    *content = gleisbildCs2(model.pageName);
+  } else if (request.compare(0, 4, "gbs-") == 0) {
+    // Una sola página (la 0).
+    if (request != "gbs-0") return false;
+    *content = gleisbildPageCs2(model);
+  } else if (request == "fs") {
+    *content = stateFile("[fahrstrassen]", " .minor=4");
+  } else if (request == "lokstat") {
+    *content = stateFile("[lokstatus]", " .minor=1");
+  } else if (request == "magstat") {
+    *content = stateFile("[magnetartikel]", " .minor=1");
+  } else if (request == "gbsstat") {
+    *content = stateFile("[gleisbild]", " .minor=1");
+  } else if (request == "fsstat") {
+    *content = stateFile("[fahrstrassen]", " .minor=1");
+  } else {
+    return false;
+  }
+  return true;
+}
+
+// ---- Pasarela ----------------------------------------------------------------
+
+void Gateway::setUid(uint32_t uid) {
+  uid_ = uid;
+  hash_ = marklin::hashFromUid(uid);
+}
+
+CanFrame Gateway::pingReply() const {
+  CanFrame f;
+  f.id = marklin::makeId(marklin::CMD_PING, true, hash_);
+  f.dlc = 8;
+  marklin::writeBe32(f.data, uid_);
+  f.data[4] = 4;  // versión de software 4.2
+  f.data[5] = 2;
+  marklin::writeBe16(f.data + 6, kDeviceTypeCentralStation);
+  return f;
+}
+
+bool Gateway::handleClientFrame(const CanFrame& f, const std::function<void(Model*)>& fillModel,
+                                std::vector<CanFrame>* replies) {
+  const uint8_t cmd = marklin::commandOf(f);
+  const bool response = marklin::isResponse(f);
+
+  if (cmd == marklin::CMD_PING && !response) {
+    // Somos la central: contestamos y dejamos que el ping llegue también a
+    // la Gleisbox, la MS2, etc. para que la app los vea.
+    replies->push_back(pingReply());
+    return true;
+  }
+
+  if (cmd == marklin::CMD_CONFIG_DATA_REQUEST && !response && f.dlc == 8) {
+    char name[9];
+    memcpy(name, f.data, 8);
+    name[8] = 0;
+    Model model;
+    std::string content;
+    if (fillModel) fillModel(&model);
+    if (!configFile(name, model, &content)) return true;  // quizá lo conteste otro equipo
+    configRequests_++;
+    CanFrame ack = f;
+    ack.id |= 0x10000;  // bit de respuesta
+    replies->push_back(ack);
+    const std::vector<CanFrame> stream = configStream(f.id, content);
+    replies->insert(replies->end(), stream.begin(), stream.end());
+    return false;
+  }
+
+  return true;
+}
+
+CanFrame s88Event(uint16_t hash, uint32_t id, bool active) {
+  CanFrame f;
+  f.id = marklin::makeId(marklin::CMD_S88_EVENT, true, hash);
+  f.dlc = 8;
+  marklin::writeBe16(f.data, static_cast<uint16_t>(id / 1000));
+  marklin::writeBe16(f.data + 2, static_cast<uint16_t>(id % 1000));
+  f.data[4] = active ? 0 : 1;  // estado anterior
+  f.data[5] = active ? 1 : 0;  // estado nuevo
+  return f;
+}
+
+}  // namespace cs2

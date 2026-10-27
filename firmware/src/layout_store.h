@@ -28,6 +28,13 @@ struct NamedSensor {
   std::string name;
   uint32_t id;
 };
+// Desvío de la maqueta activa tal como se dibujó (para la red CS2).
+struct LayoutTurnout {
+  std::string name;     // nombre tal cual (sin pasar a minúsculas)
+  std::string article;  // referencia de la pieza: "24611", "24630"...
+  uint32_t uid;         // accesorio principal
+  uint32_t uid2;        // segundo accesorio (desvío triple) o 0
+};
 
 bool validName(const String& name);
 std::vector<String> list();
@@ -45,5 +52,8 @@ void installDefaults();
 void loadActive(const std::string& name);
 const std::vector<NamedAccessory>& accessories();
 const std::vector<NamedSensor>& sensors();
+const std::vector<LayoutTurnout>& turnouts();
+// Título de la maqueta activa ("" si no hay ninguna).
+const std::string& activeTitle();
 
 }  // namespace layouts

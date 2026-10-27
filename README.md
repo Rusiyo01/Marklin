@@ -35,6 +35,11 @@ la maqueta con los desvíos a un clic, tu lista de locomotoras registradas y
 de **1 a 4 mandos a la vez en pantalla dividida**, con atajos de teclado.
 Ver [docs/puesto-de-mando.md](docs/puesto-de-mando.md).
 
+**Y el iPad, como con una Central Station**: el ESP32 se presenta en la red
+como una CS2/CS3, así que **RailControl Pro** (y otras apps para la Central
+Station) se conectan a él por WiFi y manejan locos, desvíos y corriente de
+vía. Ver [docs/railcontrol-pro.md](docs/railcontrol-pro.md).
+
 - **Habla el protocolo CAN de Märklin** (el mismo de la MS2/CS2/CS3): corriente
   de vía, velocidad, sentido, funciones F0–F31, desvíos y señales, para locos
   **MM2, DCC y mfx**.
@@ -124,7 +129,7 @@ goto inicio
 
    1. Instala el soporte de placas **esp32** de Espressif y la biblioteca
       **ArduinoJson** (versión 7) desde el gestor de bibliotecas.
-   2. Copia las carpetas `firmware/lib/marklin` y `firmware/lib/automation`
+   2. Copia las carpetas `firmware/lib/marklin`, `firmware/lib/automation` y `firmware/lib/cs2`
       a tu carpeta `Arduino/libraries`.
    3. Crea una carpeta de sketch `marklin_esp32` con todos los ficheros de
       `firmware/src` y un fichero vacío `marklin_esp32.ino`.
@@ -148,6 +153,7 @@ goto inicio
 | Documento | Contenido |
 |---|---|
 | [docs/puesto-de-mando.md](docs/puesto-de-mando.md) | Puesto de mando en el portátil: locomotoras registradas, 1–4 mandos, plano, teclado. |
+| [docs/railcontrol-pro.md](docs/railcontrol-pro.md) | iPad con RailControl Pro: el ESP32 como Central Station en la red. |
 | [docs/instalacion.md](docs/instalacion.md) | Instalación desde el navegador o sin conexión, asistente, actualizar y publicar versiones. |
 | [docs/maquetas.md](docs/maquetas.md) | Subir maquetas de C-Track Planner, asignar desvíos y sensores, ejemplos incluidos. |
 | [docs/investigacion.md](docs/investigacion.md) | Cómo funciona MS2 + Gleisbox, el protocolo CAN de Märklin, direcciones, arranque de la Gleisbox y fuentes. |
@@ -163,7 +169,8 @@ firmware/
   platformio.ini          placas: esp32dev, esp32-s3, esp32-c3
   lib/marklin/            protocolo CAN de Märklin + controlador (portable)
   lib/automation/         lenguaje de scripts y motor de ejecución (portable)
-  src/                    firmware del ESP32: TWAI, web, API, consola, sensores, maquetas
+  lib/cs2/                red de Central Station: tramas TCP/UDP, ficheros .cs2 (portable)
+  src/                    firmware del ESP32: TWAI, web, API, red CS2, consola, sensores, maquetas
   web/                    fuentes de la aplicación web (se empaqueta con tools/build_web.py)
   layouts/                maquetas de ejemplo (generadas con tools/make_layouts.js)
   tools/                  empaquetado de la web y del instalador
@@ -174,8 +181,9 @@ docs/                     documentación
 ```
 
 La lógica del protocolo y de los scripts no depende de Arduino y se prueba
-en el PC (`make -C firmware/test_host`: 31 tests, incluidos los ejemplos y
-las tramas exactas que usan can2udp/Railuino para la Gleisbox).
+en el PC (`make -C firmware/test_host`: 42 tests, incluidos los ejemplos, las
+tramas exactas que usan can2udp/Railuino para la Gleisbox y los ficheros
+y secuencias de configuración de la Central Station).
 
 ## Estado y limitaciones
 

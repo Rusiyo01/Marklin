@@ -110,6 +110,14 @@ function renderInfo(){
     ['MS2',state.ms2?'detectada':'no detectada'],['Maqueta activa',state.layout||'ninguna'],['Memoria libre',state.heap+' bytes'],
     ['En marcha',Math.floor(state.uptime/60)+' min'],['Versión',state.version]];
   $('#info').innerHTML=kv.map(([k,v])=>`<span>${k}</span><span>${esc(v)}</span>`).join('');
+  const n=state.lan||{},apps=(n.tcp||0)+(n.udp||0);
+  $('#lan').innerHTML=[['Apps conectadas',apps?apps+(apps==1?' app':' apps'):'ninguna'],
+    ['IP para la app',w.apIp+' (red «'+w.apSsid+'»)'+(w.connected?' · '+w.ip+' (WiFi de casa)':'')],
+    ['Puertos','TCP 15731 · UDP 15731/15730'],
+    ['Tráfico de apps',`${n.frames||0} órdenes · ${n.files||0} listas enviadas`]]
+    .map(([k,v])=>`<span>${k}</span><span>${esc(v)}</span>`).join('');
+  document.querySelectorAll('.apName').forEach(e=>e.textContent=w.apSsid);
+  document.querySelectorAll('.lanIp').forEach(e=>e.textContent=w.apIp);
   $('#devices').innerHTML=state.devices.map(d=>`<tr><td>${esc(d.type)}</td><td>${d.uid}</td><td>v${d.version}</td></tr>`).join('')
     ||'<tr><td class="dir">Ninguno (pulsa "Buscar equipos")</td></tr>';
 }

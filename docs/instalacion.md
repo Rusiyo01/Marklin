@@ -91,6 +91,7 @@ configuración**.
 |---|---|
 | WiFi | Red propia `Marklin-ESP32` / `marklin123`, portal cautivo, `http://marklin.local` |
 | Bus CAN | 250 kbit/s, TX = GPIO 5, RX = GPIO 4; despierta la Gleisbox si no hay MS2 |
+| Central Station en red | Para el iPad con RailControl Pro: IP `192.168.4.1`, TCP 15731 ([railcontrol-pro.md](railcontrol-pro.md)) |
 | Emergencia | Botón BOOT de la placa |
 | Scripts | `demo_tiempo`, `lanzadera`, `puente_tren1/2`, `estacion_aleatoria` |
 | Maquetas | `lanzadera`, `estacion` y `ramal_elevado`, con desvíos y sensores ya asignados que coinciden con los scripts de ejemplo |
@@ -104,6 +105,6 @@ maquetas.
 ## Publicar una versión nueva (para el dueño del repositorio)
 
 1. Cambia `FW_VERSION` en `firmware/src/version.h`.
-2. Crea y sube una etiqueta: `git tag v1.2.0 && git push origin v1.2.0`.
+2. Crea y sube una etiqueta: `git tag v1.3.0 && git push origin v1.3.0`.
 3. La CI compila las tres placas, actualiza la página de instalación y crea
    una *Release* con los paquetes sin conexión.

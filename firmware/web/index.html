@@ -347,6 +347,11 @@ exit                        terminar
     <div id="info" class="kv"></div>
   </div>
   <div class="panel">
+    <h2>iPad · RailControl Pro (Central Station)</h2>
+    <div id="lan" class="kv"></div>
+    <p style="margin:10px 0 0;line-height:1.5;color:var(--dim)">El ESP32 se presenta en la red como una Central Station. En el iPad: conéctate a la WiFi <b class="apName"></b> (o a la de casa, si el ESP32 está en ella), abre RailControl Pro, elige <b>Central Station</b> y escribe la IP <b class="lanIp"></b>. La app recibe las locos registradas y los desvíos de la maqueta activa.</p>
+  </div>
+  <div class="panel">
     <h2>Equipos en el bus CAN</h2>
     <table><tbody id="devices"></tbody></table>
     <div class="row" style="margin-top:8px"><button onclick="post('/api/ping')">Buscar equipos (ping)</button></div>

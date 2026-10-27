@@ -12,7 +12,7 @@ solo se usa para scripts, órdenes y configuración.
 
 | Método y ruta | Descripción |
 |---|---|
-| `GET /api/state` | Estado completo: corriente (`power`: `on`/`off`/`unknown`), sobrecarga, locos, sensores, accesorios, scripts en marcha, equipos del bus, estadísticas CAN, WiFi. |
+| `GET /api/state` | Estado completo: corriente (`power`: `on`/`off`/`unknown`), sobrecarga, locos, sensores, accesorios, scripts en marcha, equipos del bus, estadísticas CAN, WiFi y apps de Central Station conectadas (`lan`: `tcp`, `udp`, `frames`, `files`). |
 | `GET /api/log?since=N` | Entradas del registro con número de secuencia mayor que N (monitor CAN, mensajes de scripts, errores). |
 
 ## Mando
@@ -59,6 +59,19 @@ solo se usa para scripts, órdenes y configuración.
 | `GET /api/config` | Configuración actual (JSON). |
 | `POST /api/config` | Valida, guarda y reinicia. Cuerpo: JSON (ver [configuracion.md](configuracion.md)). |
 | `POST /api/restart` | Reinicia el ESP32. |
+
+## Red de Central Station (CS2)
+
+Además de la API REST, el ESP32 imita el interfaz de red de una Central
+Station (ver [railcontrol-pro.md](railcontrol-pro.md)):
+
+| Puerto / ruta | Uso |
+|---|---|
+| TCP 15731 | Tramas CAN de 13 bytes en los dos sentidos (hasta 4 apps). |
+| UDP 15731 → 15730 | Lo mismo por UDP; la respuesta va al puerto 15730 de la app. |
+| `GET /config/lokomotive.cs2` | Locos registradas en formato CS2. |
+| `GET /config/magnetartikel.cs2` | Desvíos de la maqueta activa. |
+| `GET /config/gleisbild.cs2`, `/config/gleisbilder/<página>.cs2` | Plano de vías (panel de desvíos y sensores). |
 
 ## Ejemplos con curl
 

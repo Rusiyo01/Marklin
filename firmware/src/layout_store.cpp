@@ -16,6 +16,8 @@ static const char* kDefaultsMarker = "/layouts/.ejemplos";
 
 static std::vector<NamedAccessory> activeAccessories;
 static std::vector<NamedSensor> activeSensors;
+static std::vector<LayoutTurnout> activeTurnouts;
+static std::string activeName;
 
 static String pathFor(const String& name) { return String(kDir) + "/" + name + ".json"; }
 
@@ -132,6 +134,8 @@ static std::string lowerStr(const char* s) {
 void loadActive(const std::string& name) {
   activeAccessories.clear();
   activeSensors.clear();
+  activeTurnouts.clear();
+  activeName.clear();
   if (name.empty()) return;
   File f = LittleFS.open(pathFor(name.c_str()), "r");
   if (!f) {
@@ -140,6 +144,9 @@ void loadActive(const std::string& name) {
   }
   JsonDocument filter;
   filter["marklin"] = true;
+  filter["name"] = true;
+  filter["pieces"][0]["id"] = true;
+  filter["pieces"][0]["t"] = true;
   JsonDocument doc;
   const DeserializationError e = deserializeJson(doc, f, DeserializationOption::Filter(filter));
   f.close();
@@ -147,12 +154,22 @@ void loadActive(const std::string& name) {
     eventLog.addf(LogKind::Error, "maqueta '%s': %s", name.c_str(), e.c_str());
     return;
   }
+  activeName = doc["name"] | name.c_str();
   for (JsonVariantConst t : doc["marklin"]["turnouts"].as<JsonArrayConst>()) {
     const std::string n = lowerStr(t["name"] | "");
-    uint32_t uid;
+    uint32_t uid = 0, uid2 = 0;
     if (n.empty()) continue;
     if (automation::parseAccessoryRef(t["addr"] | "", &uid)) activeAccessories.push_back({n, uid});
-    if (automation::parseAccessoryRef(t["addr2"] | "", &uid)) activeAccessories.push_back({n + "_2", uid});
+    if (automation::parseAccessoryRef(t["addr2"] | "", &uid2)) activeAccessories.push_back({n + "_2", uid2});
+    if (!uid) continue;
+    std::string article;
+    const int piece = t["piece"] | -1;
+    for (JsonVariantConst p : doc["pieces"].as<JsonArrayConst>())
+      if ((p["id"] | -2) == piece) {
+        article = p["t"] | "";
+        break;
+      }
+    activeTurnouts.push_back({t["name"] | "", article, uid, uid2});
   }
   for (JsonVariantConst s : doc["marklin"]["sensors"].as<JsonArrayConst>()) {
     const uint32_t id = s["id"] | 0u;
@@ -166,5 +183,7 @@ void loadActive(const std::string& name) {
 
 const std::vector<NamedAccessory>& accessories() { return activeAccessories; }
 const std::vector<NamedSensor>& sensors() { return activeSensors; }
+const std::vector<LayoutTurnout>& turnouts() { return activeTurnouts; }
+const std::string& activeTitle() { return activeName; }
 
 }  // namespace layouts
