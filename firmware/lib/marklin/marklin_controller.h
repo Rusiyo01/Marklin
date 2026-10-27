@@ -49,6 +49,18 @@ struct AccessoryState {
   uint32_t changedMs = 0;
 };
 
+// Resultado de la última lectura/escritura de CV (seq cambia con cada respuesta).
+struct ConfigResult {
+  uint32_t seq = 0;
+  uint32_t uid = 0;
+  uint16_t cv = 0;
+  uint8_t index = 0;
+  bool write = false;
+  bool ok = false;
+  bool verified = false;  // escritura comprobada por el decodificador
+  uint8_t value = 0;
+};
+
 struct DeviceInfo {
   uint32_t uid = 0;
   uint16_t type = 0;
@@ -96,6 +108,9 @@ class Controller {
   // Envía una trama cualquiera (cuenta en las estadísticas y en onFrame).
   bool sendFrame(const CanFrame& f) { return send(f); }
   bool queryLoco(uint32_t locoUid);
+  bool readConfig(uint32_t locoUid, uint16_t cv, uint8_t index);
+  bool writeConfig(uint32_t locoUid, uint16_t cv, uint8_t index, uint8_t value, bool mainTrack);
+  const ConfigResult& configResult() const { return config_; }
   // Despierta la Gleisbox (si no hay MS2) y habilita los protocolos de vía.
   bool startGleisbox(uint8_t protocolMask);
   // Sensores locales (GPIO) o simulados.
@@ -172,6 +187,7 @@ class Controller {
   uint32_t framesTx_ = 0;
   uint32_t txErrors_ = 0;
   uint32_t foreignRequests_ = 0;
+  ConfigResult config_;
 };
 
 }  // namespace marklin

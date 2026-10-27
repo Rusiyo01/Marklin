@@ -24,6 +24,7 @@ function showTab(t){
   if(tab=='auto')loadScripts();
   if(tab=='maq')loadLayouts();
   if(tab=='inv')loadInventory();
+  if(tab=='prog')pgLocos();
   if(tab=='cfg'&&!$('#cfgText').value)loadCfg();
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));

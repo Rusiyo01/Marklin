@@ -173,6 +173,24 @@ CanFrame buildAccessory(uint16_t hash, uint32_t accUid, uint8_t position,
 
 CanFrame buildPing(uint16_t hash) { return makeFrame(CMD_PING, hash, 0); }
 
+CanFrame buildReadConfig(uint16_t hash, uint32_t locoUid, uint16_t cv, uint8_t index) {
+  CanFrame f = makeFrame(CMD_READ_CONFIG, hash, 7);
+  writeBe32(f.data, locoUid);
+  writeBe16(f.data + 4, static_cast<uint16_t>((index & 0x3F) << 10 | (cv & 0x3FF)));
+  f.data[6] = 1;  // número de bytes
+  return f;
+}
+
+CanFrame buildWriteConfig(uint16_t hash, uint32_t locoUid, uint16_t cv, uint8_t index,
+                          uint8_t value, bool mainTrack) {
+  CanFrame f = makeFrame(CMD_WRITE_CONFIG, hash, 8);
+  writeBe32(f.data, locoUid);
+  writeBe16(f.data + 4, static_cast<uint16_t>((index & 0x3F) << 10 | (cv & 0x3FF)));
+  f.data[6] = value;
+  f.data[7] = mainTrack ? 0x80 : 0x00;  // modo byte directo
+  return f;
+}
+
 CanFrame buildGleisboxStart(uint16_t hash) {
   CanFrame f = makeFrame(CMD_BOOTLOADER, hash, 5);
   f.data[4] = 0x11;

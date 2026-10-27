@@ -188,6 +188,12 @@ CanFrame buildAccessory(uint16_t hash, uint32_t accUid, uint8_t position,
                         uint8_t power);
 
 CanFrame buildPing(uint16_t hash);
+// Programación de decodificadores. cv = 1..1023, index = 0..63 (mfx).
+// mainTrack: escribir en la vía principal (DCC POM); si no, en modo
+// programación (solo la loco a programar en la vía).
+CanFrame buildReadConfig(uint16_t hash, uint32_t locoUid, uint16_t cv, uint8_t index);
+CanFrame buildWriteConfig(uint16_t hash, uint32_t locoUid, uint16_t cv, uint8_t index,
+                          uint8_t value, bool mainTrack);
 
 // Trama "mágica" que la MS2 envía al arrancar para que la Gleisbox salga
 // del bootloader e inicie su aplicación (comando 0x1B, dato 0x11).

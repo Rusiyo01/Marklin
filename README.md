@@ -162,6 +162,7 @@ goto inicio
 | Documento | Contenido |
 |---|---|
 | [docs/puesto-de-mando.md](docs/puesto-de-mando.md) | Pestañas Locomotoras (1–8 a la vez), Desvíos e Inventario con fotos; lectura de locos de la MS2; teclado. |
+| [docs/programar.md](docs/programar.md) | Programar decodificadores (CV): DCC, POM, MM2 y mfx; cambiar dirección. |
 | [docs/railcontrol-pro.md](docs/railcontrol-pro.md) | iPad con RailControl Pro: el ESP32 como Central Station en la red. |
 | [docs/instalacion.md](docs/instalacion.md) | Instalación desde el navegador o sin conexión, asistente, actualizar y publicar versiones. |
 | [docs/maquetas.md](docs/maquetas.md) | Subir maquetas de C-Track Planner, asignar desvíos y sensores, ejemplos incluidos. |

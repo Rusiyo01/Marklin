@@ -130,6 +130,15 @@ bool Controller::switchAccessory(uint32_t accUid, uint8_t position,
 
 bool Controller::ping() { return send(buildPing(hash_)); }
 
+bool Controller::readConfig(uint32_t locoUid, uint16_t cv, uint8_t index) {
+  return send(buildReadConfig(hash_, locoUid, cv, index));
+}
+
+bool Controller::writeConfig(uint32_t locoUid, uint16_t cv, uint8_t index, uint8_t value,
+                             bool mainTrack) {
+  return send(buildWriteConfig(hash_, locoUid, cv, index, value, mainTrack));
+}
+
 bool Controller::queryLoco(uint32_t locoUid) {
   bool a = send(buildSpeedQuery(hash_, locoUid));
   bool b = send(buildDirectionQuery(hash_, locoUid));
@@ -212,6 +221,21 @@ void Controller::handleFrame(const CanFrame& f) {
       break;
     case CMD_PING:
       if (isResponse(f) && f.dlc >= 8) updateDevice(f);
+      break;
+    case CMD_READ_CONFIG:
+    case CMD_WRITE_CONFIG:
+      // Respuesta de la Gleisbox. Lectura: DLC 7 con el valor (DLC 6 = sin
+      // respuesta del decodificador). Escritura: bit 7 del byte 7 = escrito,
+      // bit 6 = comprobado.
+      if (!isResponse(f) || f.dlc < 6) break;
+      config_.seq++;
+      config_.uid = uid;
+      config_.cv = readBe16(f.data + 4) & 0x3FF;
+      config_.index = f.data[4] >> 2;
+      config_.write = cmd == CMD_WRITE_CONFIG;
+      config_.value = f.dlc >= 7 ? f.data[6] : 0;
+      config_.ok = config_.write ? (f.dlc >= 8 && (f.data[7] & 0x80)) : f.dlc >= 7;
+      config_.verified = config_.write && f.dlc >= 8 && (f.data[7] & 0x40);
       break;
     default:
       break;

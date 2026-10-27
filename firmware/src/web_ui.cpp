@@ -551,6 +551,46 @@ void redirectToApp() {
   server.send(302, "text/plain", "");
 }
 
+// ---- Programación de decodificadores --------------------------------------------------
+
+// POST /api/cv?loco=dcc:3&cv=29&index=0&op=read|write&value=6&main=1
+void handleCvOp() {
+  uint32_t uid;
+  if (!argLoco(&uid)) return sendError("invalid loco address");
+  const long cv = server.arg("cv").toInt(), index = server.arg("index").toInt();
+  if (cv < 1 || cv > 1023) return sendError("invalid CV (1-1023)");
+  if (index < 0 || index > 63) return sendError("invalid index (0-63)");
+  bool sent;
+  if (server.arg("op") == "write") {
+    const long v = server.arg("value").toInt();
+    if (!server.hasArg("value") || v < 0 || v > 255) return sendError("invalid value (0-255)");
+    sent = controller.writeConfig(uid, cv, index, v, server.arg("main") == "1");
+  } else {
+    sent = controller.readConfig(uid, cv, index);
+  }
+  if (!sent) return sendError("could not send to the CAN bus");
+  JsonDocument d;
+  d["ok"] = true;
+  d["seq"] = controller.configResult().seq;
+  sendJson(d);
+}
+
+void handleCvResult() {
+  const marklin::ConfigResult& r = controller.configResult();
+  JsonDocument d;
+  d["seq"] = r.seq;
+  char ref[24];
+  marklin::formatLocoUid(r.uid, ref, sizeof(ref));
+  d["loco"] = ref;
+  d["cv"] = r.cv;
+  d["index"] = r.index;
+  d["write"] = r.write;
+  d["ok"] = r.ok;
+  d["verified"] = r.verified;
+  d["value"] = r.value;
+  sendJson(d);
+}
+
 // ---- Inventario -----------------------------------------------------------------------
 
 void handleInventory() {
@@ -709,6 +749,8 @@ void webSetup() {
   server.on("/api/restart", HTTP_POST, handleRestart);
   server.on("/api/locoreg", HTTP_POST, handleLocoReg);
   server.on("/api/inventory", HTTP_GET, handleInventory);
+  server.on("/api/cv", HTTP_POST, handleCvOp);
+  server.on("/api/cv", HTTP_GET, handleCvResult);
   server.on("/api/ms2import", HTTP_POST, handleMs2Import);
   server.on("/api/autoimport", HTTP_POST, handleAutoImport);
   server.on("/api/photo", HTTP_GET, handlePhotoGet);

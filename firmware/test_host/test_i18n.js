@@ -27,6 +27,7 @@ for (const f of jsFiles) {
   for (const m of src.matchAll(lit)) keys.add(norm(vm.runInNewContext(m[1])));
   // Nombres que se traducen indirectamente.
   if (f === "desk.js") for (const m of src.matchAll(/\["[^"]*", "([^"]+)"\]/g)) keys.add(m[1]);
+  if (f === "program.js") for (const m of src.matchAll(/\[\d+, "([^"]+)"/g)) keys.add(m[1]);
   if (f === "wizard.js") {
     const steps = src.match(/WZ_STEPS = (\[[^\]]*\])/);
     for (const s of JSON.parse(steps[1])) keys.add(s);

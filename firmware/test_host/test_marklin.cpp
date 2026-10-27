@@ -270,3 +270,22 @@ TEST(controlador_errores_de_envio) {
   CHECK_EQ(c.txErrors(), 1u);
   CHECK(c.findLoco(1) == nullptr || c.findLoco(1)->speed == 0);
 }
+
+TEST(programacion_de_cv) {
+  FakeSink sink;
+  Controller c(&sink);
+  c.setUid(0x4D4B0001);
+  const uint16_t h = c.hash();
+  c.readConfig(locoUid(Protocol::DCC, 3), 29, 0);
+  CHECK(frameIs(sink.sent.back(), makeId(CMD_READ_CONFIG, false, h), {0, 0, 0xC0, 3, 0, 29, 1}));
+  c.writeConfig(locoUid(Protocol::MFX, 5), 5, 2, 200, true);
+  CHECK(frameIs(sink.sent.back(), makeId(CMD_WRITE_CONFIG, false, h), {0, 0, 0x40, 5, 0x08, 5, 200, 0x80}));
+  // Respuestas de la Gleisbox.
+  c.handleFrame(frame(CMD_READ_CONFIG, true, 0x1234, {0, 0, 0xC0, 3, 0, 29, 6}));
+  const ConfigResult& r = c.configResult();
+  CHECK(r.seq == 1 && !r.write && r.ok && r.cv == 29 && r.value == 6 && r.uid == 0xC003);
+  c.handleFrame(frame(CMD_READ_CONFIG, true, 0x1234, {0, 0, 0xC0, 3, 0, 29}));
+  CHECK(r.seq == 2 && !r.ok);
+  c.handleFrame(frame(CMD_WRITE_CONFIG, true, 0x1234, {0, 0, 0x40, 5, 0x08, 5, 200, 0xC0}));
+  CHECK(r.seq == 3 && r.write && r.ok && r.verified && r.index == 2 && r.cv == 5);
+}

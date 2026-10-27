@@ -199,6 +199,7 @@ label.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1
   <button data-tab="sw" data-i18n>Turnouts</button>
   <button data-tab="inv" data-i18n>Inventory</button>
   <button data-tab="maq" data-i18n>Layout</button>
+  <button data-tab="prog" data-i18n>Program</button>
   <button data-tab="auto" data-i18n>Automation</button>
   <button data-tab="sens" data-i18n>Sensors</button>
   <button data-tab="mon" data-i18n>Monitor</button>
@@ -318,6 +319,38 @@ label.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1
       <button id="saveMap" onclick="saveMap()" data-i18n>Save assignments</button>
     </div>
   </div>
+</section>
+
+<section id="prog">
+  <div class="panel">
+    <div class="row">
+      <label><span data-i18n>Mode</span> <select id="pgMode">
+        <option value="dcc" data-i18n>DCC · programming (only this loco on the track)</option>
+        <option value="pom" data-i18n>DCC · main track (POM, write only)</option>
+        <option value="mm" data-i18n>MM2 · programmable decoder (write only, only this loco on the track)</option>
+        <option value="mfx" data-i18n>mfx (SID from the MS2)</option></select></label>
+      <label id="pgAddrBox"><span data-i18n>Address</span> <input id="pgAddr" type="number" min="1" value="3" style="width:90px"></label>
+      <select id="pgLoco" title="Take mode and address from a loco of the inventory" data-i18n-title></select>
+    </div>
+    <p class="dir small" id="pgHint"></p>
+  </div>
+  <div class="panel"><h2 data-i18n>Common values</h2><table><tbody id="pgTable"></tbody></table></div>
+  <div class="panel">
+    <h2 data-i18n>Any CV</h2>
+    <div class="row">
+      <label>CV <input id="pgCv" type="number" min="1" max="1023" value="1" style="width:80px"></label>
+      <label id="pgIdxBox"><span data-i18n>Index</span> <input id="pgIdx" type="number" min="0" max="63" value="0" style="width:70px"></label>
+      <label><span data-i18n>Value</span> <input id="pgVal" type="number" min="0" max="255" style="width:80px"></label>
+      <button class="pgRead" onclick="pgRead(+$('#pgCv').value, $('#pgVal'))" data-i18n>Read</button>
+      <button onclick="pgWrite(+$('#pgCv').value, +$('#pgVal').value)" data-i18n>Write</button>
+    </div>
+  </div>
+  <div class="panel" id="pgAddrPanel">
+    <h2 data-i18n>Change address</h2>
+    <div class="row"><input id="pgNew" type="number" min="1" max="10239" style="width:100px">
+      <button onclick="pgChangeAddr()" data-i18n>Write address</button></div>
+  </div>
+  <div class="panel"><h2 data-i18n>Results</h2><div id="pgLog" class="help"></div></div>
 </section>
 
 <section id="auto">
@@ -448,6 +481,7 @@ exit                        finish
 <script src="layout.js"></script>
 <script src="desk.js"></script>
 <script src="inventory.js"></script>
+<script src="program.js"></script>
 <script src="wizard.js"></script>
 </body>
 </html>
