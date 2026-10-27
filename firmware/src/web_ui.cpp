@@ -197,22 +197,22 @@ void handleLog() {
 void handlePower() {
   const bool on = server.arg("on") == "1";
   controller.setTrackPower(on);
-  sendOk(on ? "corriente ON" : "corriente OFF");
+  sendOk(on ? "track power ON" : "track power OFF");
 }
 
 void handleEmergency() {
-  emergencyStop("boton de la web");
-  sendOk("parada de emergencia");
+  emergencyStop("web button");
+  sendOk("emergency stop");
 }
 
 void handleHalt() {
   const int n = controller.stopAllLocos();
-  sendOk(String(n) + " locos paradas");
+  sendOk(String(n) + " locos stopped");
 }
 
 void handleLoco() {
   uint32_t uid;
-  if (!argLoco(&uid)) return sendError("loco no valida (ej. mm2:24, dcc:3, mfx:5)");
+  if (!argLoco(&uid)) return sendError("invalid loco (e.g. mm2:24, dcc:3, mfx:5)");
   if (server.hasArg("speed")) {
     long s = server.arg("speed").toInt();
     if (s < 0) s = 0;
@@ -228,12 +228,12 @@ void handleLoco() {
   }
   if (server.hasArg("fn")) {
     const long fn = server.arg("fn").toInt();
-    if (fn < 0 || fn > 31) return sendError("funcion fuera de rango (0-31)");
+    if (fn < 0 || fn > 31) return sendError("function out of range (0-31)");
     controller.setFunction(uid, static_cast<uint8_t>(fn), server.arg("on") == "1");
   }
   if (server.hasArg("estop")) controller.emergencyStop(uid);
   if (server.hasArg("add")) {
-    if (!controller.touchLoco(uid)) return sendError("tabla de locos llena");
+    if (!controller.touchLoco(uid)) return sendError("loco table full");
     controller.queryLoco(uid);
   }
   sendOk();
@@ -242,26 +242,26 @@ void handleLoco() {
 void handleAccessory() {
   uint32_t uid;
   if (!automation::parseAccessoryRef(server.arg("addr").c_str(), &uid))
-    return sendError("direccion de accesorio no valida (ej. 5, mm:5, dcc:12)");
+    return sendError("invalid accessory address (e.g. 5, mm:5, dcc:12)");
   const long pos = server.arg("pos").toInt();
-  if (pos < 0 || pos > 3) return sendError("posicion no valida (0-3)");
+  if (pos < 0 || pos > 3) return sendError("invalid position (0-3)");
   controller.switchAccessory(uid, static_cast<uint8_t>(pos), config.accessoryPulseMs);
   sendOk();
 }
 
 void handleSensor() {
   const long id = server.arg("id").toInt();
-  if (id <= 0) return sendError("id de sensor no valido");
+  if (id <= 0) return sendError("invalid sensor id");
   controller.setSensor(static_cast<uint32_t>(id), server.arg("state") == "1");
   cs2server::notifySensor(static_cast<uint32_t>(id), server.arg("state") == "1");
-  eventLog.addf(LogKind::Info, "sensor %ld simulado = %s", id,
+  eventLog.addf(LogKind::Info, "sensor %ld simulated = %s", id,
                 server.arg("state") == "1" ? "on" : "off");
   sendOk();
 }
 
 void handlePing() {
   controller.ping();
-  sendOk("ping enviado");
+  sendOk("ping sent");
 }
 
 // ---- Scripts -----------------------------------------------------------------------
@@ -279,7 +279,7 @@ void handleScriptList() {
 
 void handleScriptGet() {
   String src;
-  if (!scripts::read(server.arg("name"), &src)) return sendError("no existe", 404);
+  if (!scripts::read(server.arg("name"), &src)) return sendError("does not exist", 404);
   server.send(200, "text/plain; charset=utf-8", src);
 }
 
@@ -295,10 +295,10 @@ void fillCompileResult(JsonDocument& doc, const String& src) {
 void handleScriptSave() {
   const String name = server.arg("name");
   if (!scripts::validName(name))
-    return sendError("nombre no valido: usa minusculas, numeros, _ o - (max. 31)");
+    return sendError("invalid name: use lowercase letters, digits, _ or - (max. 31)");
   const String src = body();
-  if (src.length() > scripts::kMaxScriptSize) return sendError("script demasiado grande");
-  if (!scripts::write(name, src)) return sendError("no se pudo guardar", 500);
+  if (src.length() > scripts::kMaxScriptSize) return sendError("script too large");
+  if (!scripts::write(name, src)) return sendError("could not save", 500);
   JsonDocument doc;
   doc["ok"] = true;
   fillCompileResult(doc, src);
@@ -307,9 +307,9 @@ void handleScriptSave() {
 
 void handleScriptDelete() {
   const String name = server.arg("name");
-  if (engine.isRunning(name.c_str())) return sendError("detén el script antes de borrarlo");
-  if (!scripts::remove(name)) return sendError("no se pudo borrar");
-  sendOk("borrado");
+  if (engine.isRunning(name.c_str())) return sendError("stop the script before deleting it");
+  if (!scripts::remove(name)) return sendError("could not delete");
+  sendOk("deleted");
 }
 
 void handleScriptCheck() {
@@ -322,18 +322,18 @@ void handleScriptCheck() {
 void handleRun() {
   String err;
   if (!startScript(server.arg("name"), &err)) return sendError(err);
-  sendOk("iniciado");
+  sendOk("started");
 }
 
 void handleScriptStop() {
   if (server.hasArg("all")) {
     engine.stopAll();
-    return sendOk("todos detenidos");
+    return sendOk("all stopped");
   }
   bool ok = server.hasArg("slot") ? engine.stop(server.arg("slot").toInt())
                                   : engine.stopByName(server.arg("name").c_str());
-  if (!ok) return sendError("no estaba en marcha");
-  sendOk("detenido");
+  if (!ok) return sendError("it was not running");
+  sendOk("stopped");
 }
 
 void handleExec() {
@@ -352,14 +352,14 @@ void handleConfigSave() {
   AppConfig parsed;
   String err;
   if (!parseConfig(json, &parsed, &err)) return sendError(err);
-  if (!saveConfigJson(configToJson(parsed))) return sendError("no se pudo guardar", 500);
-  eventLog.add(LogKind::Info, "configuracion guardada, reiniciando...");
-  sendOk("guardado; reiniciando");
+  if (!saveConfigJson(configToJson(parsed))) return sendError("could not save", 500);
+  eventLog.add(LogKind::Info, "configuration saved, restarting...");
+  sendOk("saved; restarting");
   scheduleRestart(800);
 }
 
 void handleRestart() {
-  sendOk("reiniciando");
+  sendOk("restarting");
   scheduleRestart(500);
 }
 
@@ -369,27 +369,27 @@ void handleRestart() {
 //   delete=1                                            baja
 void handleLocoReg() {
   uint32_t uid;
-  if (!argLoco(&uid)) return sendError("direccion de loco no valida (ej. mm2:24, dcc:3, mfx:5)");
+  if (!argLoco(&uid)) return sendError("invalid loco address (e.g. mm2:24, dcc:3, mfx:5)");
   auto find = [](uint32_t u) {
     return std::find_if(config.locos.begin(), config.locos.end(),
                         [u](const LocoConfig& l) { return l.uid == u; });
   };
   if (server.hasArg("delete")) {
     auto it = find(uid);
-    if (it == config.locos.end()) return sendError("esa loco no esta registrada");
+    if (it == config.locos.end()) return sendError("that loco is not registered");
     config.locos.erase(it);
-    if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+    if (!saveConfig(config)) return sendError("could not save", 500);
     controller.setLocoName(uid, "");
     inventory::removePhoto(uid);
     inventory::touch();
-    return sendOk("loco eliminada del registro");
+    return sendOk("loco removed from the inventory");
   }
   String name = server.arg("name");
   name.trim();
   name.toLowerCase();
   const std::string n = name.c_str();
   if (!layouts::validName(name) || !(n[0] >= 'a' && n[0] <= 'z'))
-    return sendError("nombre para scripts no valido: empieza por una letra; solo minusculas, numeros, _ y -");
+    return sendError("invalid script name: start with a letter; only lowercase letters, digits, _ and -");
   String label = server.arg("label");
   label.trim();
   if (label.length() > 60) label = label.substring(0, 60);
@@ -397,12 +397,12 @@ void handleLocoReg() {
   uint32_t oldUid = uid;
   if (server.hasArg("old") && server.arg("old").length()) {
     if (!automation::parseLocoRef(server.arg("old").c_str(), &oldUid))
-      return sendError("direccion anterior no valida");
+      return sendError("invalid previous address");
   }
   for (const auto& l : config.locos) {
     if (l.uid == oldUid) continue;
-    if (l.name == n) return sendError("ya hay otra loco con ese nombre");
-    if (l.uid == uid) return sendError("ya hay otra loco registrada con esa direccion");
+    if (l.name == n) return sendError("another loco already has that name");
+    if (l.uid == uid) return sendError("another loco is already registered with that address");
   }
   auto it = find(oldUid);
   if (it == config.locos.end()) {
@@ -425,21 +425,21 @@ void handleLocoReg() {
     }
     while (!it->fn.empty() && it->fn.back() == 0) it->fn.pop_back();
   }
-  if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+  if (!saveConfig(config)) return sendError("could not save", 500);
   inventory::renamePhoto(oldUid, uid);
   inventory::touch();
   if (oldUid != uid) controller.setLocoName(oldUid, "");
   controller.setLocoName(uid, n.c_str());
   controller.queryLoco(uid);
-  sendOk(String("registrada: ") + (label.length() ? label : name));
+  sendOk(String("registered: ") + (label.length() ? label : name));
 }
 
 // Asistente de primera configuración.
-//   {"locos":[{"name":"x","loco":"mm2:24"}], "layout":"estacion",
+//   {"locos":[{"name":"x","loco":"mm2:24"}], "layout":"station",
 //    "wifi":{"mode":"sta","ssid":"...","password":"..."}}
 void handleSetup() {
   JsonDocument in;
-  if (deserializeJson(in, body())) return sendError("datos no validos");
+  if (deserializeJson(in, body())) return sendError("invalid data");
   JsonDocument cfg;
   deserializeJson(cfg, configToJson(config));
   if (in["locos"].is<JsonArrayConst>()) {
@@ -473,10 +473,10 @@ void handleSetup() {
   String err;
   if (!parseConfig(json, &parsed, &err)) return sendError(err);
   if (!parsed.layout.empty() && !layouts::exists(parsed.layout.c_str()))
-    return sendError("la maqueta elegida no existe");
+    return sendError("the chosen layout does not exist");
   const bool wifiChanged = parsed.wifiMode != config.wifiMode || parsed.staSsid != config.staSsid ||
                            parsed.staPassword != config.staPassword;
-  if (!saveConfigJson(json)) return sendError("no se pudo guardar", 500);
+  if (!saveConfigJson(json)) return sendError("could not save", 500);
   config = parsed;
   for (const auto& l : config.locos) controller.setLocoName(l.uid, l.name.c_str());
   inventory::touch();
@@ -484,9 +484,9 @@ void handleSetup() {
   JsonDocument d;
   d["ok"] = true;
   d["restart"] = wifiChanged;
-  d["msg"] = "configuracion guardada";
+  d["msg"] = "configuration saved";
   sendJson(d);
-  eventLog.add(LogKind::Info, "asistente completado");
+  eventLog.add(LogKind::Info, "setup wizard completed");
   if (wifiChanged) scheduleRestart(1500);
 }
 
@@ -506,7 +506,7 @@ void handleLayoutList() {
 
 void handleLayoutGet() {
   String json;
-  if (!layouts::read(server.arg("name"), &json)) return sendError("no existe", 404);
+  if (!layouts::read(server.arg("name"), &json)) return sendError("does not exist", 404);
   server.send(200, "application/json", json);
 }
 
@@ -515,27 +515,27 @@ void handleLayoutSave() {
   String err;
   if (!layouts::write(name, body(), &err)) return sendError(err);
   if (config.layout == name.c_str()) activateLayout(config.layout);
-  sendOk("maqueta guardada");
+  sendOk("layout saved");
 }
 
 void handleLayoutDelete() {
   const String name = server.arg("name");
-  if (!layouts::remove(name)) return sendError("no se pudo borrar");
+  if (!layouts::remove(name)) return sendError("could not delete");
   if (config.layout == name.c_str()) {
     config.layout.clear();
     saveConfig(config);
     activateLayout("");
   }
-  sendOk("maqueta borrada");
+  sendOk("layout deleted");
 }
 
 void handleLayoutActivate() {
   const String name = server.arg("name");
-  if (name.length() && !layouts::exists(name)) return sendError("no existe esa maqueta");
+  if (name.length() && !layouts::exists(name)) return sendError("that layout does not exist");
   config.layout = name.c_str();
-  if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
+  if (!saveConfig(config)) return sendError("could not save", 500);
   activateLayout(config.layout);
-  sendOk(name.length() ? String("maqueta activa: ") + name : String("sin maqueta activa"));
+  sendOk(name.length() ? String("active layout: ") + name : String("no active layout"));
 }
 
 // ---- Interfaz y portal cautivo ---------------------------------------------------------
@@ -576,13 +576,13 @@ void handleInventory() {
 void handleMs2Import() {
   String err;
   if (!inventory::startImport(&err)) return sendError(err);
-  sendOk("leyendo las locos de la MS2...");
+  sendOk("reading the locos from the MS2...");
 }
 
 void handleAutoImport() {
   config.autoImport = server.arg("on") == "1";
-  if (!saveConfig(config)) return sendError("no se pudo guardar", 500);
-  sendOk(config.autoImport ? "lectura automatica activada" : "lectura automatica desactivada");
+  if (!saveConfig(config)) return sendError("could not save", 500);
+  sendOk(config.autoImport ? "automatic reading enabled" : "automatic reading disabled");
 }
 
 // Fotos: la web las reduce (JPEG de ~30 KB) y las sube como formulario.
@@ -596,43 +596,43 @@ void handlePhotoUpload() {
   if (up.status == UPLOAD_FILE_START) {
     photoError = "";
     if (!argLoco(&photoUid)) {
-      photoError = "direccion de loco no valida";
+      photoError = "invalid loco address";
       return;
     }
     photoFile = LittleFS.open("/photos/subida.tmp", "w");
-    if (!photoFile) photoError = "no se pudo crear el fichero";
+    if (!photoFile) photoError = "could not create the file";
   } else if (up.status == UPLOAD_FILE_WRITE) {
     if (!photoFile) return;
     if (up.totalSize > kMaxPhoto) {
-      photoError = "la foto es demasiado grande";
+      photoError = "the photo is too large";
       photoFile.close();
       LittleFS.remove("/photos/subida.tmp");
       return;
     }
-    if (photoFile.write(up.buf, up.currentSize) != up.currentSize) photoError = "memoria llena";
+    if (photoFile.write(up.buf, up.currentSize) != up.currentSize) photoError = "memory full";
   } else if (up.status == UPLOAD_FILE_END || up.status == UPLOAD_FILE_ABORTED) {
     if (photoFile) photoFile.close();
-    if (up.status == UPLOAD_FILE_ABORTED) photoError = "subida interrumpida";
+    if (up.status == UPLOAD_FILE_ABORTED) photoError = "upload interrupted";
   }
 }
 
 void handlePhotoDone() {
   if (photoError.length() || !LittleFS.exists("/photos/subida.tmp")) {
     LittleFS.remove("/photos/subida.tmp");
-    return sendError(photoError.length() ? photoError : "no llego ninguna foto");
+    return sendError(photoError.length() ? photoError : "no photo received");
   }
   const String path = inventory::photoPath(photoUid);
   LittleFS.remove(path);
-  if (!LittleFS.rename("/photos/subida.tmp", path)) return sendError("no se pudo guardar", 500);
+  if (!LittleFS.rename("/photos/subida.tmp", path)) return sendError("could not save", 500);
   inventory::touch();
-  sendOk("foto guardada");
+  sendOk("photo saved");
 }
 
 void handlePhotoGet() {
   uint32_t uid;
-  if (!argLoco(&uid)) return sendError("direccion de loco no valida");
+  if (!argLoco(&uid)) return sendError("invalid loco address");
   File f = LittleFS.open(inventory::photoPath(uid), "r");
-  if (!f) return sendError("sin foto", 404);
+  if (!f) return sendError("no photo", 404);
   server.sendHeader("Cache-Control", "max-age=31536000");
   server.streamFile(f, "image/jpeg");
   f.close();
@@ -640,9 +640,9 @@ void handlePhotoGet() {
 
 void handlePhotoDelete() {
   uint32_t uid;
-  if (!argLoco(&uid)) return sendError("direccion de loco no valida");
+  if (!argLoco(&uid)) return sendError("invalid loco address");
   inventory::removePhoto(uid);
-  sendOk("foto quitada");
+  sendOk("photo removed");
 }
 
 // Ficheros de configuración de la central, como en la CS2:
@@ -671,7 +671,7 @@ void handleNotFound() {
       host != String(config.hostname.c_str()) + ".local") {
     return redirectToApp();
   }
-  server.send(404, "text/plain", "no encontrado");
+  server.send(404, "text/plain", "not found");
 }
 
 }  // namespace

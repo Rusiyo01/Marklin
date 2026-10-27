@@ -58,11 +58,11 @@ bool read(const String& name, String* out) {
 
 bool write(const String& name, const String& json, String* error) {
   if (!validName(name)) {
-    *error = "nombre no valido: usa minusculas, numeros, _ o - (max. 31)";
+    *error = "invalid name: use lowercase letters, digits, _ or - (max. 31)";
     return false;
   }
   if (json.length() > kMaxLayoutSize) {
-    *error = "maqueta demasiado grande (max. 48 KB)";
+    *error = "layout too large (max. 48 KB)";
     return false;
   }
   // Validar sin cargar todo en memoria: solo las referencias de las piezas.
@@ -71,23 +71,23 @@ bool write(const String& name, const String& json, String* error) {
   JsonDocument doc;
   const DeserializationError e = deserializeJson(doc, json, DeserializationOption::Filter(filter));
   if (e) {
-    *error = String("JSON no valido: ") + e.c_str();
+    *error = String("invalid JSON: ") + e.c_str();
     return false;
   }
   if (!doc["pieces"].is<JsonArray>() || doc["pieces"].size() == 0) {
-    *error = "no es una maqueta de C-Track Planner (faltan las piezas)";
+    *error = "not a C-Track Planner layout (the pieces are missing)";
     return false;
   }
   if (!LittleFS.exists(kDir)) LittleFS.mkdir(kDir);
   File f = LittleFS.open(pathFor(name), "w");
   if (!f) {
-    *error = "no se pudo guardar";
+    *error = "could not save";
     return false;
   }
   const size_t n = f.print(json);
   f.close();
   if (n != json.length()) {
-    *error = "no hay espacio suficiente en la memoria";
+    *error = "not enough free memory";
     LittleFS.remove(pathFor(name));
     return false;
   }
@@ -121,7 +121,7 @@ void installDefaults() {
     m.print("1");
     m.close();
   }
-  eventLog.addf(LogKind::Info, "instaladas %d maquetas de ejemplo", kDefaultLayoutCount);
+  eventLog.addf(LogKind::Info, "installed %d example layouts", kDefaultLayoutCount);
 }
 
 static std::string lowerStr(const char* s) {
@@ -139,7 +139,7 @@ void loadActive(const std::string& name) {
   if (name.empty()) return;
   File f = LittleFS.open(pathFor(name.c_str()), "r");
   if (!f) {
-    eventLog.addf(LogKind::Error, "maqueta activa '%s' no encontrada", name.c_str());
+    eventLog.addf(LogKind::Error, "active layout '%s' not found", name.c_str());
     return;
   }
   JsonDocument filter;
@@ -151,7 +151,7 @@ void loadActive(const std::string& name) {
   const DeserializationError e = deserializeJson(doc, f, DeserializationOption::Filter(filter));
   f.close();
   if (e) {
-    eventLog.addf(LogKind::Error, "maqueta '%s': %s", name.c_str(), e.c_str());
+    eventLog.addf(LogKind::Error, "layout '%s': %s", name.c_str(), e.c_str());
     return;
   }
   activeName = doc["name"] | name.c_str();
@@ -176,7 +176,7 @@ void loadActive(const std::string& name) {
     if (id == 0) continue;
     activeSensors.push_back({lowerStr(s["name"] | ""), id});
   }
-  eventLog.addf(LogKind::Info, "maqueta activa '%s': %u desvios, %u sensores", name.c_str(),
+  eventLog.addf(LogKind::Info, "active layout '%s': %u turnouts, %u sensors", name.c_str(),
                 static_cast<unsigned>(activeAccessories.size()),
                 static_cast<unsigned>(activeSensors.size()));
 }

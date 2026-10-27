@@ -21,11 +21,11 @@ async function loadLayouts(show) {
   try {
     PLAN.list = await api("/api/layouts");
   } catch (e) {
-    toast(e.message, true);
+    toast(tr(e.message), true);
     return;
   }
   const sel = $("#layoutSel");
-  sel.innerHTML = '<option value="">(ninguna)</option>' +
+  sel.innerHTML = '<option value="">(' + t("none") + ')</option>' +
     PLAN.list.map((l) => `<option value="${esc(l.name)}">${esc(l.title)}</option>`).join("");
   const active = (PLAN.list.find((l) => l.active) || {}).name || "";
   const name = show !== undefined ? show : active;
@@ -34,7 +34,7 @@ async function loadLayouts(show) {
 }
 
 async function openLayout(name, quiet) {
-  if (PLAN.dirty && !confirm("Hay cambios sin guardar en las asignaciones. ¿Descartarlos?")) {
+  if (PLAN.dirty && !confirm(t("There are unsaved changes in the assignments. Discard them?"))) {
     $("#layoutSel").value = PLAN.name;
     return;
   }
@@ -47,7 +47,7 @@ async function openLayout(name, quiet) {
       PLAN.L = await api("/api/layout?name=" + encodeURIComponent(name));
       PLAN.L.marklin = Object.assign({ turnouts: [], sensors: [] }, PLAN.L.marklin || {});
     } catch (e) {
-      toast(e.message, true);
+      toast(tr(e.message), true);
     }
   }
   const active = (PLAN.list.find((l) => l.active) || {}).name || "";
@@ -165,7 +165,7 @@ function updateTurnoutChips() {
     if (!p || !T) return;
     const act = activeRoutes(p, T), kind = CT.LIB[p.t].kind;
     let txt = "?";
-    if (act) txt = kind === "threeway" ? ["recto", "izquierda", "derecha"][act[0]] : act.includes(0) ? "recto" : "desviado";
+    if (act) txt = kind === "threeway" ? [t("straight"), t("left"), t("right")][act[0]] : act.includes(0) ? t("straight") : t("diverging");
     b.querySelector("span").textContent = txt;
     b.classList.toggle("dv", !!act && !act.includes(0));
   });
@@ -184,7 +184,7 @@ function planClick(e, svg) {
   const p = pieceById(id);
   if (!CT.isSwitch(p.t)) return;
   const T = turnoutOf(id);
-  if (!T || !T.addr) return toast('Este desvío aún no tiene dirección: asígnasela en la pestaña Maqueta.', true);
+  if (!T || !T.addr) return toast(t('This turnout has no address yet: assign it in the Layout tab.'), true);
   throwSwitch(p, T);
 }
 planViews().forEach((svg) => svg.addEventListener("click", (e) => planClick(e, svg)));
@@ -267,8 +267,8 @@ function toggleEdit() {
   PLAN.sel = null;
   $("#editBtn").classList.toggle("act", PLAN.edit);
   $("#planHint").textContent = PLAN.edit
-    ? "Toca una pieza para asignarle un desvío o un sensor. Después pulsa Guardar."
-    : "Toca un desvío para cambiarlo. Los sensores activos se ven en verde.";
+    ? t("Tap a piece to assign it a turnout or a sensor. Then press Save.")
+    : t("Tap a turnout to switch it. Active sensors are shown in green.");
   drawPlan();
   renderEdit();
 }
@@ -285,16 +285,16 @@ function renderEdit() {
   };
   const [pr, ad] = split(T.addr), [pr2, ad2] = split(T.addr2);
   const protoSel = (id, v) => `<select id="${id}"><option value="mm"${v === "mm" ? " selected" : ""}>MM</option><option value="dcc"${v === "dcc" ? " selected" : ""}>DCC</option></select>`;
-  box.innerHTML = `<h2>Pieza ${esc(p.t)} · ${esc(lib.name)} <span class="dir">(id ${p.id})</span></h2>
-    ${sw ? `<div class="row"><label>Nombre <input id="eName" size="12" value="${esc(T.name || "")}" placeholder="entrada"></label>
-      <label>Dirección ${protoSel("eProto", pr)} <input id="eAddr" type="number" min="1" style="width:80px" value="${esc(ad)}"></label>
-      ${lib.kind === "threeway" ? `<label>2ª dirección ${protoSel("eProto2", pr2)} <input id="eAddr2" type="number" min="1" style="width:80px" value="${esc(ad2)}"></label>` : ""}
+  box.innerHTML = `<h2>${t("Piece")} ${esc(p.t)} · ${esc(tr(lib.name))} <span class="dir">(id ${p.id})</span></h2>
+    ${sw ? `<div class="row"><label>${t("Name")} <input id="eName" size="12" value="${esc(T.name || "")}" placeholder="${t("entry")}"></label>
+      <label>${t("Address")} ${protoSel("eProto", pr)} <input id="eAddr" type="number" min="1" style="width:80px" value="${esc(ad)}"></label>
+      ${lib.kind === "threeway" ? `<label>${t("2nd address")} ${protoSel("eProto2", pr2)} <input id="eAddr2" type="number" min="1" style="width:80px" value="${esc(ad2)}"></label>` : ""}
       <label><input type="checkbox" id="eInv"${T.invert ? " checked" : ""}> Invertido</label></div>` : ""}
-    <div class="row" style="margin-top:8px"><label>Sensor nº <input id="eSid" type="number" min="1" style="width:80px" value="${S.id || ""}"></label>
-      <label>Nombre <input id="eSname" size="12" value="${esc(S.name || "")}" placeholder="anden"></label></div>
-    <div class="row" style="margin-top:10px"><button class="act" onclick="applyEdit()">Aplicar</button>
-      <button onclick="clearEdit()">Quitar asignación</button><span class="sp"></span>
-      <button onclick="PLAN.sel=null;renderEdit();updatePlanState()">Cerrar</button></div>`;
+    <div class="row" style="margin-top:8px"><label>${t("Sensor no.")} <input id="eSid" type="number" min="1" style="width:80px" value="${S.id || ""}"></label>
+      <label>${t("Name")} <input id="eSname" size="12" value="${esc(S.name || "")}" placeholder="${t("platform")}"></label></div>
+    <div class="row" style="margin-top:10px"><button class="act" onclick="applyEdit()">${t("Apply")}</button>
+      <button onclick="clearEdit()">${t("Remove assignment")}</button><span class="sp"></span>
+      <button onclick="PLAN.sel=null;renderEdit();updatePlanState()">${t("Close")}</button></div>`;
 }
 
 function applyEdit() {
@@ -307,7 +307,7 @@ function applyEdit() {
       const T = { piece: p.id, name: name ? slug(name) : "d" + (addr || p.id), addr: addr ? $("#eProto").value + ":" + addr : "" };
       if ($("#eAddr2") && $("#eAddr2").value.trim()) T.addr2 = $("#eProto2").value + ":" + $("#eAddr2").value.trim();
       if ($("#eInv").checked) T.invert = true;
-      if (M.turnouts.some((t) => t.name === T.name)) return toast("Ya hay otro desvío llamado " + T.name, true);
+      if (M.turnouts.some((t) => t.name === T.name)) return toast(t("There is already another turnout called {0}", T.name), true);
       M.turnouts.push(T);
     }
   }
@@ -364,7 +364,7 @@ function autoNumber() {
   PLAN.dirty = n > 0 || PLAN.dirty;
   drawPlan();
   renderMap();
-  toast(n ? `${n} desvíos numerados. Pulsa Guardar.` : "Todos los desvíos ya tenían dirección");
+  toast(n ? t("{0} turnouts numbered. Press Save.", n) : t("All turnouts already had an address"));
 }
 
 function renderMap() {
@@ -373,13 +373,13 @@ function renderMap() {
   if (!L) return;
   const M = L.marklin;
   const sw = L.pieces.filter((p) => CT.isSwitch(p.t)).length;
-  $("#mapTurnouts").innerHTML = M.turnouts.map((t) => `<tr><td><b>${esc(t.name)}</b></td><td>${esc(accRef(t.addr) || "—")}${t.addr2 ? " + " + esc(accRef(t.addr2)) : ""}${t.invert ? " (invertido)" : ""}</td><td class="dir">pieza ${t.piece}</td></tr>`).join("")
-    || `<tr><td class="dir">Ningún desvío asignado (${sw} en la maqueta).</td></tr>`;
-  $("#mapSensors").innerHTML = M.sensors.map((s) => `<tr><td><b>S${s.id}</b></td><td>${esc(s.name || "")}</td><td class="dir">pieza ${s.piece}</td></tr>`).join("")
-    || '<tr><td class="dir">Ningún sensor colocado.</td></tr>';
+  $("#mapTurnouts").innerHTML = M.turnouts.map((tu) => `<tr><td><b>${esc(tu.name)}</b></td><td>${esc(accRef(tu.addr) || "—")}${tu.addr2 ? " + " + esc(accRef(tu.addr2)) : ""}${tu.invert ? " (" + t("inverted") + ")" : ""}</td><td class="dir">${t("piece")} ${tu.piece}</td></tr>`).join("")
+    || `<tr><td class="dir">${t("No turnout assigned ({0} in the layout).", sw)}</td></tr>`;
+  $("#mapSensors").innerHTML = M.sensors.map((s) => `<tr><td><b>S${s.id}</b></td><td>${esc(s.name || "")}</td><td class="dir">${t("piece")} ${s.piece}</td></tr>`).join("")
+    || `<tr><td class="dir">${t("No sensor placed.")}</td></tr>`;
   const ex = M.turnouts[0], es = M.sensors.find((s) => s.name);
   $("#mapHint").textContent = ex || es
-    ? `En los scripts: ${ex ? `switch ${ex.name} round` : ""}${ex && es ? "  ·  " : ""}${es ? `wait sensor ${es.name} on` : ""}`
+    ? `${t("In scripts:")} ${ex ? `switch ${ex.name} round` : ""}${ex && es ? "  ·  " : ""}${es ? `wait sensor ${es.name} on` : ""}`
     : "";
   $("#saveMap").classList.toggle("act", PLAN.dirty);
 }
@@ -394,7 +394,7 @@ async function saveMap() {
 }
 
 async function delLayout() {
-  if (!PLAN.name || !confirm(`¿Borrar la maqueta "${PLAN.name}" del ESP32?`)) return;
+  if (!PLAN.name || !confirm(t('Delete the layout "{0}" from the ESP32?', PLAN.name))) return;
   try {
     await post("/api/layout/delete", { name: PLAN.name });
     PLAN.dirty = false;
@@ -408,7 +408,7 @@ async function importLayoutFile(file) {
   const { layout, unknown } = CT.parseLayoutFile(await file.text());
   const name = slug(layout.name || file.name.replace(/\.(json|html?)$/i, ""));
   if (PLAN.list.some((l) => l.name === name)) {
-    if (!confirm(`Ya existe la maqueta "${name}". ¿Sustituirla? Se conservan las asignaciones de las piezas que sigan existiendo.`)) return null;
+    if (!confirm(t('The layout "{0}" already exists. Replace it? The assignments of the pieces that still exist are kept.', name))) return null;
     if (!layout.marklin) {
       try {
         const old = await api("/api/layout?name=" + encodeURIComponent(name));
@@ -423,10 +423,10 @@ async function importLayoutFile(file) {
     }
   }
   const txt = JSON.stringify(layout);
-  if (txt.length > 48 * 1024) throw new Error("La maqueta es demasiado grande (máx. 48 KB)");
+  if (txt.length > 48 * 1024) throw new Error(t("The layout is too large (max. 48 KB)"));
   await post("/api/layout", { name }, txt);
   await post("/api/layout/activate", { name });
-  if (unknown.length) toast("Piezas no reconocidas (no se dibujan): " + unknown.join(", "), true);
+  if (unknown.length) toast(t("Unrecognised pieces (not drawn): {0}", unknown.join(", ")), true);
   return name;
 }
 
@@ -443,7 +443,7 @@ $("#layoutFile").onchange = async (e) => {
       if (typeof wzLayoutsChanged === "function") wzLayoutsChanged(name);
     }
   } catch (err) {
-    toast(err.message, true);
+    toast(tr(err.message), true);
   }
 };
 $("#layoutSel").onchange = (e) => openLayout(e.target.value);

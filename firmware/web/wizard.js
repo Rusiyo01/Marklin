@@ -2,7 +2,7 @@
 // Aparece la primera vez (setupDone = false): comprueba el bus CAN, recoge
 // las locos (detectadas desde la MS2 o a mano), elige la maqueta y la WiFi.
 const WZ = { open: false, step: 0, locos: [], removed: new Set(), layouts: [], layout: "", wifi: { mode: "ap", ssid: "", password: "" }, test: true, done: false };
-const WZ_STEPS = ["Conexión", "Locomotoras", "Maqueta", "WiFi", "Listo"];
+const WZ_STEPS = ["Connection", "Locomotives", "Layout", "WiFi", "Done"];
 
 function openWizard() {
   WZ.open = true;
@@ -50,9 +50,9 @@ function wzCheck(ok, text, hint) {
 
 function wzRender() {
   const s = WZ.step, b = $("#wzBody");
-  $("#wzSteps").innerHTML = WZ_STEPS.map((t, i) => `<span class="${i === s ? "cur" : i < s ? "past" : ""}">${i + 1}. ${t}</span>`).join("");
+  $("#wzSteps").innerHTML = WZ_STEPS.map((name, i) => `<span class="${i === s ? "cur" : i < s ? "past" : ""}">${i + 1}. ${t(name)}</span>`).join("");
   $("#wzBack").style.visibility = s > 0 && !WZ.done ? "visible" : "hidden";
-  $("#wzNext").textContent = s === WZ_STEPS.length - 1 ? "Terminar" : "Siguiente";
+  $("#wzNext").textContent = s === WZ_STEPS.length - 1 ? t("Finish") : t("Next");
   $("#wzNext").style.display = WZ.done ? "none" : "";
   $("#wzLater").style.display = WZ.done ? "none" : "";
   if (WZ.done) return;
@@ -60,42 +60,40 @@ function wzRender() {
     const c = state.can || {}, dev = state.devices || [];
     const gb = dev.some((d) => d.type === "Gleisbox");
     const canOk = c.state === "ok" && !(c.tec >= 128);
-    b.innerHTML = `<h2>¡Bienvenido!</h2>
-      <p>Este asistente deja el sistema listo en un minuto (desde el portátil o el móvil). Primero comprobamos la conexión con la Gleisbox
-      (enciéndela y, si la tienes, conecta también la MS2).</p>
-      ${wzCheck(canOk, "Bus CAN funcionando", "Revisa el cableado CAN-H / CAN-L / GND (ver docs/hardware.md). Puedes seguir y revisarlo luego.")}
-      ${wzCheck(gb, "Gleisbox encontrada", 'Pulsa "Buscar equipos". Si no aparece, revisa el cable y que la Gleisbox esté enchufada.')}
-      ${wzCheck(state.ms2, "MS2 conectada", "Opcional: sin MS2 el ESP32 despierta la Gleisbox por sí mismo (locos MM2 y DCC).")}
-      <div class="row" style="margin-top:10px"><button onclick="post('/api/ping')">Buscar equipos</button></div>`;
+    b.innerHTML = `<h2>${t("Welcome!")}</h2>
+      <p>${t("This wizard gets the system ready in a minute (from the laptop or the phone). First we check the connection with the Gleisbox (switch it on and, if you have it, connect the MS2 too).")}</p>
+      ${wzCheck(canOk, t("CAN bus working"), t("Check the CAN-H / CAN-L / GND wiring (see docs/hardware.md). You can continue and check it later."))}
+      ${wzCheck(gb, t("Gleisbox found"), t('Press "Find devices". If it does not appear, check the cable and that the Gleisbox is plugged in.'))}
+      ${wzCheck(state.ms2, t("MS2 connected"), t("Optional: without an MS2 the ESP32 wakes the Gleisbox up by itself (MM2 and DCC locos)."))}
+      <p class="dir">${t("Language")}: <select onchange="setLang(this.value)">${Object.entries(LANGS).map(([k, v]) => `<option value="${k}"${k === LANG ? " selected" : ""}>${v}</option>`).join("")}</select></p>
+      <div class="row" style="margin-top:10px"><button onclick="post('/api/ping')">${t("Find devices")}</button></div>`;
   } else if (s === 1) {
-    b.innerHTML = `<h2>Tus locomotoras</h2>
-      <p>Mueve cada loco un momento con la MS2 y aparecerá aquí sola. También puedes añadirlas con su dirección.
-      Ponles el nombre que quieras (p. ej. "Cocodrilo SBB").</p>
+    b.innerHTML = `<h2>${t("Your locomotives")}</h2>
+      <p>${t('Drive each loco for a moment with the MS2 and it will appear here by itself. You can also add them with their address. Give them any name you like (e.g. "Crocodile SBB").')}</p>
       <div id="wzLocoList"></div>
       <div class="row" style="margin-top:10px">
         <select id="wzProto"><option value="mm2">MM2</option><option value="dcc">DCC</option><option value="mfx">mfx (SID)</option></select>
-        <input id="wzAddr" type="number" min="1" placeholder="dirección" style="width:110px">
-        <button onclick="wzAddLoco()">Añadir</button></div>`;
+        <input id="wzAddr" type="number" min="1" placeholder="${t("address")}" style="width:110px">
+        <button onclick="wzAddLoco()">${t("Add")}</button></div>`;
     wzRenderLocoList();
   } else if (s === 2) {
     const opt = (v, title, sub) => `<label class="opt"><input type="radio" name="wzLay" value="${esc(v)}"${WZ.layout === v ? " checked" : ""}> <span><b>${esc(title)}</b>${sub ? `<span class="dir"> ${esc(sub)}</span>` : ""}</span></label>`;
-    b.innerHTML = `<h2>Tu maqueta</h2>
-      <p>Elige una maqueta de ejemplo o sube la tuya desde <b>C-Track Planner</b> (botón Guardar → Exportar archivo .json,
-      o la app sin conexión .html). Podrás asignar desvíos y sensores en la pestaña Maqueta.</p>
+    b.innerHTML = `<h2>${t("Your layout")}</h2>
+      <p>${t("Choose an example layout or upload yours from <b>C-Track Planner</b> (Save button → Export .json file, or the offline .html app). You can assign turnouts and sensors in the Layout tab.")}</p>
       ${WZ.layouts.map((l) => opt(l.name, l.title, l.name)).join("")}
-      ${opt("", "Ninguna por ahora", "")}
-      <div class="row" style="margin-top:10px"><button onclick="$('#layoutFile').click()">Subir maqueta de C-Track Planner…</button></div>`;
+      ${opt("", t("None for now"), "")}
+      <div class="row" style="margin-top:10px"><button onclick="$('#layoutFile').click()">${t("Upload a C-Track Planner layout…")}</button></div>`;
     b.querySelectorAll('input[name="wzLay"]').forEach((r) => (r.onchange = () => (WZ.layout = r.value)));
   } else if (s === 3) {
     const w = WZ.wifi;
-    b.innerHTML = `<h2>Red WiFi</h2>
-      <label class="opt"><input type="radio" name="wzW" value="ap"${w.mode === "ap" ? " checked" : ""}> <span><b>Red propia del ESP32</b>
-        <span class="dir"> Conecta el portátil o el móvil a «${esc((state.wifi && state.wifi.apSsid) || "Marklin-ESP32")}». Ese dispositivo no tendrá Internet mientras tanto.</span></span></label>
-      <label class="opt"><input type="radio" name="wzW" value="sta"${w.mode === "sta" ? " checked" : ""}> <span><b>Mi WiFi de casa</b>
-        <span class="dir"> Recomendado para el portátil: el ESP32 se une a tu red (debe ser de 2,4 GHz), sigues con Internet y lo abres con http://marklin.local o su IP. La red propia sigue activa por si acaso.</span></span></label>
+    b.innerHTML = `<h2>${t("WiFi network")}</h2>
+      <label class="opt"><input type="radio" name="wzW" value="ap"${w.mode === "ap" ? " checked" : ""}> <span><b>${t("The ESP32's own network")}</b>
+        <span class="dir"> ${t("Connect the laptop or phone to «{0}». That device will have no Internet meanwhile.", esc((state.wifi && state.wifi.apSsid) || "Marklin-ESP32"))}</span></span></label>
+      <label class="opt"><input type="radio" name="wzW" value="sta"${w.mode === "sta" ? " checked" : ""}> <span><b>${t("My home WiFi")}</b>
+        <span class="dir"> ${t("Recommended for the laptop: the ESP32 joins your network (it must be 2.4 GHz), you keep Internet and open it with http://marklin.local or its IP. The own network stays on just in case.")}</span></span></label>
       <div id="wzSta" class="row" style="margin-top:8px"${w.mode === "sta" ? "" : " hidden"}>
-        <input id="wzSsid" placeholder="Nombre de la red" value="${esc(w.ssid)}">
-        <input id="wzPass" type="password" placeholder="Contraseña" value="${esc(w.password)}"></div>`;
+        <input id="wzSsid" placeholder="${t("Network name")}" value="${esc(w.ssid)}">
+        <input id="wzPass" type="password" placeholder="${t("Password")}" value="${esc(w.password)}"></div>`;
     b.querySelectorAll('input[name="wzW"]').forEach((r) => (r.onchange = () => {
       w.mode = r.value;
       $("#wzSta").hidden = w.mode !== "sta";
@@ -103,14 +101,13 @@ function wzRender() {
   } else {
     const first = WZ.locos[0];
     const lay = WZ.layouts.find((l) => l.name === WZ.layout);
-    b.innerHTML = `<h2>Todo listo</h2>
-      <ul class="sum"><li>${WZ.locos.length} locomotora(s): ${WZ.locos.map((l) => `<b>${esc(wzName(l))}</b> (${esc(l.ref)})`).join(", ") || "ninguna"}</li>
-      <li>Maqueta: <b>${esc(lay ? lay.title : "ninguna")}</b></li>
-      <li>WiFi: <b>${WZ.wifi.mode === "sta" ? "red de casa «" + esc(WZ.wifi.ssid) + "»" : "red propia del ESP32"}</b></li></ul>
-      ${first ? `<label class="opt"><input type="checkbox" id="wzTest"${WZ.test ? " checked" : ""}> <span>Crear el script <b>prueba_${esc(wzName(first))}</b>:
-        una ida y vuelta corta y lenta para la primera prueba.</span></label>` : ""}`;
-    const t = $("#wzTest");
-    if (t) t.onchange = () => (WZ.test = t.checked);
+    b.innerHTML = `<h2>${t("All set")}</h2>
+      <ul class="sum"><li>${t("{0} loco(s): {1}", WZ.locos.length, WZ.locos.map((l) => `<b>${esc(wzName(l))}</b> (${esc(l.ref)})`).join(", ") || t("none"))}</li>
+      <li>${t("Layout")}: <b>${esc(lay ? lay.title : t("none"))}</b></li>
+      <li>WiFi: <b>${WZ.wifi.mode === "sta" ? t("home network «{0}»", esc(WZ.wifi.ssid)) : t("the ESP32's own network")}</b></li></ul>
+      ${first ? `<label class="opt"><input type="checkbox" id="wzTest"${WZ.test ? " checked" : ""}> <span>${t("Create the script <b>{0}</b>: a short, slow back-and-forth run for the first test.", "test_" + esc(wzName(first)))}</span></label>` : ""}`;
+    const chk = $("#wzTest");
+    if (chk) chk.onchange = () => (WZ.test = chk.checked);
   }
 }
 
@@ -123,11 +120,11 @@ function wzRenderLocoList() {
   if (focused) return;  // no repintar mientras se escribe
   box.innerHTML = WZ.locos.map((l, i) => `<div class="row lrow"><input data-ref="${esc(l.ref)}" value="${esc(l.name)}" placeholder="${esc(wzName(l))}" oninput="WZ.locos[${i}].name=this.value">
     <span class="dir">${esc(l.ref)}</span><span class="sp"></span><button class="small" onclick="wzDelLoco(${i})">✕</button></div>`).join("")
-    || '<p class="dir">Todavía no hay ninguna. Mueve una loco con la MS2 o añádela abajo.</p>';
+    || `<p class="dir">${t("None yet. Drive a loco with the MS2 or add it below.")}</p>`;
 }
 function wzAddLoco() {
   const a = parseInt($("#wzAddr").value, 10);
-  if (!(a > 0)) return toast("Escribe la dirección de la loco", true);
+  if (!(a > 0)) return toast(t("Write the loco address"), true);
   const ref = $("#wzProto").value + ":" + a;
   if (!WZ.locos.some((l) => l.ref === ref)) WZ.locos.push({ ref, name: "" });
   WZ.removed.delete(ref);
@@ -150,7 +147,7 @@ async function wzNext() {
     if (w.mode === "sta") {
       w.ssid = $("#wzSsid").value.trim();
       w.password = $("#wzPass").value;
-      if (!w.ssid) return toast("Escribe el nombre de tu red WiFi", true);
+      if (!w.ssid) return toast(t("Write the name of your WiFi network"), true);
     }
   }
   if (WZ.step < WZ_STEPS.length - 1) {
@@ -168,28 +165,23 @@ async function wzNext() {
   try {
     if (WZ.test && locos.length) {
       const n = locos[0].name;
-      const src = `# Script de prueba creado por el asistente.\n# Pon la loco "${n}" en un tramo recto y ten a mano el STOP de la MS2.\n` +
+      const src = `# Test script created by the setup wizard.\n# Put the loco "${n}" on a straight section and keep the MS2 STOP button at hand.\n` +
         `power on\nfunc ${n} 0 on\ndir ${n} fwd\nramp ${n} 25% 2s\nwait 3s\nramp ${n} 0 2s\nwait 2s\n` +
-        `dir ${n} rev\nramp ${n} 25% 2s\nwait 3s\nramp ${n} 0 2s\nfunc ${n} 0 off\nlog prueba terminada\n`;
-      await api("/api/script?name=" + encodeURIComponent(("prueba_" + n).slice(0, 31)), { method: "POST", body: src });
+        `dir ${n} rev\nramp ${n} 25% 2s\nwait 3s\nramp ${n} 0 2s\nfunc ${n} 0 off\nlog test finished\n`;
+      await api("/api/script?name=" + encodeURIComponent(("test_" + n).slice(0, 31)), { method: "POST", body: src });
     }
     const body = { locos, layout: WZ.layout, wifi: WZ.wifi };
     const d = await api("/api/setup", { method: "POST", body: JSON.stringify(body) });
     WZ.done = true;
     wzRender();
     if (d.restart) {
-      $("#wzBody").innerHTML = `<h2>Conectando a «${esc(WZ.wifi.ssid)}»…</h2>
-        <p>El ESP32 se reinicia y se une a tu red. Conecta este dispositivo a esa misma red y abre
-        <b>http://marklin.local</b> (o busca la IP del ESP32 en tu router).</p>
-        <p class="dir">Si <b>marklin.local</b> no abre (pasa en algunos Windows), conéctate a la red «Marklin-ESP32»,
-        que sigue siempre activa, abre <b>http://192.168.4.1</b> y en <b>Ajustes</b> verás la IP de casa del ESP32.
-        Recuerda: el ESP32 solo funciona con redes de <b>2,4 GHz</b>.</p>`;
+      $("#wzBody").innerHTML = `<h2>${t("Connecting to «{0}»…", esc(WZ.wifi.ssid))}</h2>
+        <p>${t("The ESP32 restarts and joins your network. Connect this device to that same network and open <b>http://marklin.local</b> (or look up the ESP32's IP in your router).")}</p>
+        <p class="dir">${t("If <b>marklin.local</b> does not open (it happens on some Windows PCs), connect to the «Marklin-ESP32» network, which is always on, open <b>http://192.168.4.1</b> and you will see the ESP32's home IP in <b>Settings</b>. Remember: the ESP32 only works with <b>2.4 GHz</b> networks.")}</p>`;
     } else {
-      $("#wzBody").innerHTML = `<h2>¡Configurado!</h2>
-        <p>Pulsa <b>GO</b> arriba para dar corriente a la vía. En la pestaña <b>Locomotoras</b> tienes tus locos a la izquierda:
-        haz clic en una para llevarla a un mando (hasta 8 a la vez). Los desvíos se cambian en la pestaña <b>Desvíos</b>, y en <b>Inventario</b> añades fotos y funciones.
-        En <b>Maqueta</b> asignas desvíos y sensores; los scripts de ejemplo están en <b>Automático</b>.</p>
-        <div class="row"><span class="sp"></span><button class="act" onclick="closeWizard();refresh()">Empezar</button></div>`;
+      $("#wzBody").innerHTML = `<h2>${t("Configured!")}</h2>
+        <p>${t("Press <b>GO</b> at the top to power the track. In the <b>Locomotives</b> tab you have your locos on the left: click one to put it on a throttle (up to 8 at once). Turnouts are switched in the <b>Turnouts</b> tab, and in <b>Inventory</b> you add photos and functions. In <b>Layout</b> you assign turnouts and sensors; the example scripts are in <b>Automation</b>.")}</p>
+        <div class="row"><span class="sp"></span><button class="act" onclick="closeWizard();refresh()">${t("Start")}</button></div>`;
       if (typeof loadLayouts === "function") loadLayouts();
     }
   } catch (e) {

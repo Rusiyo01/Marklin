@@ -1,5 +1,11 @@
 # Puesto de mando (portátil)
 
+> La interfaz está en **inglés** de fábrica. Para verla en **español** (como
+> en este documento), elige *Español* en el selector de idioma de arriba a la
+> derecha; también hay alemán, italiano y francés. Cada navegador recuerda su
+> idioma. Pestañas en inglés: *Locomotives*, *Turnouts*, *Inventory*,
+> *Layout*, *Automation*, *Sensors*, *Monitor*, *Settings*.
+
 La aplicación está pensada para manejar la maqueta desde el **portátil** (el
 móvil sirve como mando secundario: las mismas pantallas se adaptan a una
 columna). Tiene tres pestañas para el día a día:

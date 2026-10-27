@@ -38,7 +38,7 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
   JsonDocument doc;
   DeserializationError e = deserializeJson(doc, json);
   if (e) {
-    *error = String("JSON no valido: ") + e.c_str();
+    *error = String("invalid JSON: ") + e.c_str();
     return false;
   }
   AppConfig cfg;
@@ -52,15 +52,15 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
   readStr(wifi["hostname"], &cfg.hostname);
   cfg.wifiMode = lowerStr(cfg.wifiMode);
   if (cfg.wifiMode != "ap" && cfg.wifiMode != "sta") {
-    *error = "wifi.mode debe ser \"ap\" o \"sta\"";
+    *error = "wifi.mode must be \"ap\" or \"sta\"";
     return false;
   }
   if (cfg.wifiMode == "sta" && cfg.staSsid.empty()) {
-    *error = "wifi.ssid es obligatorio en modo \"sta\"";
+    *error = "wifi.ssid is required in \"sta\" mode";
     return false;
   }
   if (!cfg.apPassword.empty() && cfg.apPassword.size() < 8) {
-    *error = "wifi.apPassword debe tener al menos 8 caracteres (o estar vacia)";
+    *error = "wifi.apPassword must have at least 8 characters (or be empty)";
     return false;
   }
   if (cfg.apSsid.empty()) cfg.apSsid = "Marklin-ESP32";
@@ -73,12 +73,12 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
   cfg.gleisboxInit = lowerStr(cfg.gleisboxInit);
   if (cfg.canTxPin < 0 || cfg.canRxPin < 0 || !validPin(cfg.canTxPin) ||
       !validPin(cfg.canRxPin) || cfg.canTxPin == cfg.canRxPin) {
-    *error = "can.txPin y can.rxPin deben ser GPIO validos y distintos";
+    *error = "can.txPin and can.rxPin must be valid and different GPIOs";
     return false;
   }
   if (cfg.gleisboxInit != "auto" && cfg.gleisboxInit != "always" &&
       cfg.gleisboxInit != "never") {
-    *error = "can.gleisboxInit debe ser \"auto\", \"always\" o \"never\"";
+    *error = "can.gleisboxInit must be \"auto\", \"always\" or \"never\"";
     return false;
   }
   if (can["protocols"].is<JsonArrayConst>()) {
@@ -89,7 +89,7 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
       else if (s == "mfx") mask |= marklin::PROTO_MASK_MFX;
       else if (s == "dcc") mask |= marklin::PROTO_MASK_DCC;
       else {
-        *error = String("protocolo desconocido en can.protocols: ") + s.c_str();
+        *error = String("unknown protocol in can.protocols: ") + s.c_str();
         return false;
       }
     }
@@ -98,14 +98,14 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
   int pulse = cfg.accessoryPulseMs;
   readInt(can["accessoryPulseMs"], &pulse);
   if (pulse < 20 || pulse > 5000) {
-    *error = "can.accessoryPulseMs debe estar entre 20 y 5000";
+    *error = "can.accessoryPulseMs must be between 20 and 5000";
     return false;
   }
   cfg.accessoryPulseMs = static_cast<uint16_t>(pulse);
 
   readInt(doc["estopPin"], &cfg.estopPin);
   if (!validPin(cfg.estopPin)) {
-    *error = "estopPin no valido";
+    *error = "invalid estopPin";
     return false;
   }
 
@@ -118,12 +118,12 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
     if (lc.label.size() > 60) lc.label.resize(60);
     const char* ref = l["loco"] | "";
     if (!validName(lc.name)) {
-      *error = String("locos[") + index + "]: nombre no valido (letras, numeros, _ y -)";
+      *error = String("locos[") + index + "]: invalid name (letters, digits, _ and -)";
       return false;
     }
     if (!automation::parseLocoRef(ref, &lc.uid)) {
-      *error = String("locos[") + index + "]: direccion no valida '" + ref +
-               "' (ej. mm2:24, dcc:3, mfx:5)";
+      *error = String("locos[") + index + "]: invalid address '" + ref +
+               "' (e.g. mm2:24, dcc:3, mfx:5)";
       return false;
     }
     for (JsonVariantConst t : l["fn"].as<JsonArrayConst>()) {
@@ -144,20 +144,20 @@ bool parseConfig(const String& json, AppConfig* out, String* error) {
     sc.activeLow = s["activeLow"] | true;
     sc.debounceMs = s["debounceMs"] | 30;
     if (sc.id == 0) {
-      *error = String("sensors[") + index + "]: falta \"id\" (numero > 0)";
+      *error = String("sensors[") + index + "]: missing \"id\" (number > 0)";
       return false;
     }
     if (!sc.name.empty() && !validName(sc.name)) {
-      *error = String("sensors[") + index + "]: nombre no valido";
+      *error = String("sensors[") + index + "]: invalid name";
       return false;
     }
     if (!validPin(sc.pin)) {
-      *error = String("sensors[") + index + "]: pin no valido";
+      *error = String("sensors[") + index + "]: invalid pin";
       return false;
     }
     for (const auto& other : cfg.sensors) {
       if (other.id == sc.id) {
-        *error = String("sensors[") + index + "]: id repetido";
+        *error = String("sensors[") + index + "]: duplicated id";
         return false;
       }
     }
@@ -236,12 +236,12 @@ String configToJson(const AppConfig& cfg) {
 
 bool loadConfig(AppConfig* cfg, String* error) {
   if (!LittleFS.exists(kConfigPath)) {
-    *error = "no existe /config.json (valores por defecto)";
+    *error = "/config.json does not exist (defaults)";
     return false;
   }
   File f = LittleFS.open(kConfigPath, "r");
   if (!f) {
-    *error = "no se pudo abrir /config.json";
+    *error = "could not open /config.json";
     return false;
   }
   String json = f.readString();

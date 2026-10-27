@@ -68,7 +68,8 @@ Ver el README (PlatformIO o IDE de Arduino).
    (contraseña `marklin123`) y abre **http://192.168.4.1** (en el móvil se
    abre sola). Si el móvil avisa de que "la red no tiene
    Internet", elige **mantener la conexión**.
-2. El **asistente** te guía:
+2. El **asistente** te guía (en inglés; en su primera pantalla, o arriba a la
+   derecha, puedes elegir **Español**, Deutsch, Italiano o Français):
    1. **Conexión**: comprueba el bus CAN y busca la Gleisbox y la MS2.
    2. **Locomotoras**: mueve cada loco con la MS2 y aparece sola (o añádela
       con su dirección); dales un nombre corto.
@@ -93,8 +94,8 @@ configuración**.
 | Bus CAN | 250 kbit/s, TX = GPIO 5, RX = GPIO 4; despierta la Gleisbox si no hay MS2 |
 | Central Station en red | Para el iPad con RailControl Pro: IP `192.168.4.1`, TCP 15731 ([railcontrol-pro.md](railcontrol-pro.md)) |
 | Emergencia | Botón BOOT de la placa |
-| Scripts | `demo_tiempo`, `lanzadera`, `puente_tren1/2`, `estacion_aleatoria` |
-| Maquetas | `lanzadera`, `estacion` y `ramal_elevado`, con desvíos y sensores ya asignados que coinciden con los scripts de ejemplo |
+| Scripts | `demo_time`, `shuttle`, `bridge_train1/2`, `random_station` |
+| Maquetas | `shuttle`, `station` y `branch_line`, con desvíos y sensores ya asignados que coinciden con los scripts de ejemplo |
 
 ## Actualizar
 

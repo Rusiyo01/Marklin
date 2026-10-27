@@ -7,7 +7,7 @@ pestaña **Maqueta** dibuja el plano y lo convierte en un **cuadro de mando**:
 - Tocas un desvío y cambia (se dibuja en amarillo el recorrido activo).
 - Los sensores ocupados se iluminan en verde en directo.
 - Los **nombres** de desvíos y sensores se usan en los scripts:
-  `switch entrada round`, `wait sensor anden on`.
+  `switch entry round`, `wait sensor platform on`.
 
 ## Subir una maqueta
 
@@ -48,9 +48,9 @@ pulsa **Guardar asignaciones**.
 
 | Maqueta | Piezas | Asignaciones | Script que la usa |
 |---|---|---|---|
-| `lanzadera` | recta con toperas | sensores 1 `estacion_a` y 2 `estacion_b` | `lanzadera` |
-| `estacion` | óvalo R2 con estación de dos vías | desvíos `entrada` (mm:1) y `salida` (mm:2); sensores 7 `llegada`, 8 `anden`, 9 `anden_via2` | `estacion_aleatoria` |
-| `ramal_elevado` | el ejemplo del planificador: óvalo con ramal en rampa | desvío `ramal` (mm:3); sensor 10 `fin_ramal` | — |
+| `shuttle` | recta con toperas | sensores 1 `station_a` y 2 `station_b` | `shuttle` |
+| `station` | óvalo R2 con estación de dos vías | desvíos `entry` (mm:1) y `exit` (mm:2); sensores 7 `arrival`, 8 `platform`, 9 `platform_track2` | `random_station` |
+| `branch_line` | el ejemplo del planificador: óvalo con ramal en rampa | desvío `branch` (mm:3); sensor 10 `branch_end` | — |
 
 Se pueden abrir también en C-Track Planner (son ficheros normales de
 maqueta) para modificarlas.

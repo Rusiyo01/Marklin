@@ -137,13 +137,13 @@ TEST(referencias_de_loco_y_accesorio) {
 }
 
 TEST(errores_de_compilacion) {
-  CHECK(compileError("speed tren 100").find("loco desconocida") != std::string::npos);
-  CHECK(compileError("loco tren mm2 24\nspeed tren 2000").find("velocidad") != std::string::npos);
-  CHECK(compileError("goto nada").find("etiqueta no definida") != std::string::npos);
-  CHECK(compileError("repeat 3\nwait 1s").find("falta 'end'") != std::string::npos);
-  CHECK(compileError("end").find("sin 'repeat'") != std::string::npos);
-  CHECK(compileError("bailar").find("orden desconocida") != std::string::npos);
-  CHECK(compileError("label a\nlabel a").find("repetida") != std::string::npos);
+  CHECK(compileError("speed tren 100").find("unknown loco") != std::string::npos);
+  CHECK(compileError("loco tren mm2 24\nspeed tren 2000").find("speed") != std::string::npos);
+  CHECK(compileError("goto nada").find("undefined label") != std::string::npos);
+  CHECK(compileError("repeat 3\nwait 1s").find("missing 'end'") != std::string::npos);
+  CHECK(compileError("end").find("without 'repeat'") != std::string::npos);
+  CHECK(compileError("bailar").find("unknown command") != std::string::npos);
+  CHECK(compileError("label a\nlabel a").find("duplicated") != std::string::npos);
   CHECK(compileError("wait sensor 1 on timeout 0s").find("timeout") != std::string::npos);
   Program p = compile("loco t mm2 24\n\nspeed t 50%\nbailar", nullptr);
   CHECK_EQ(p.errorLine, 4);
@@ -349,12 +349,12 @@ TEST(no_dos_veces_el_mismo_script) {
   std::string err;
   CHECK(e.start("x", "wait 10s", &err) >= 0);
   CHECK_EQ(e.start("x", "wait 10s", &err), -1);
-  CHECK(err.find("ya esta en marcha") != std::string::npos);
+  CHECK(err.find("already running") != std::string::npos);
   CHECK(e.start("y", "wait 10s", &err) >= 0);
   CHECK(e.start("z", "wait 10s", &err) >= 0);
   CHECK(e.start("w", "wait 10s", &err) >= 0);
   CHECK_EQ(e.start("v", "wait 10s", &err), -1);
-  CHECK(err.find("huecos") != std::string::npos);
+  CHECK(err.find("free slots") != std::string::npos);
   CHECK_EQ(e.activeCount(), 4);
   e.stopAll();
   CHECK_EQ(e.activeCount(), 0);
@@ -395,7 +395,7 @@ TEST(desvios_con_nombre_de_la_maqueta) {
   Engine e(&h);
   CHECK_STR(e.exec("switch entrada round"), "");
   CHECK(h.called("switch 12288 0"));
-  CHECK(e.exec("switch salida round").find("desvio desconocido") != std::string::npos);
+  CHECK(e.exec("switch salida round").find("unknown turnout") != std::string::npos);
   // Un número sigue siendo una dirección MM aunque haya nombres.
   CHECK_STR(e.exec("switch 2 straight"), "");
   CHECK(h.called("switch 12289 1"));
@@ -422,8 +422,8 @@ TEST(orden_inmediata) {
   CHECK_STR(e.exec("switch 5 straight"), "");
   CHECK(h.called("switch 12292 1"));
   CHECK_STR(e.exec("power off"), "");
-  CHECK(e.exec("wait 1s").find("no permitida") != std::string::npos);
-  CHECK(e.exec("speed nadie 3").find("desconocida") != std::string::npos);
+  CHECK(e.exec("wait 1s").find("not allowed") != std::string::npos);
+  CHECK(e.exec("speed nadie 3").find("unknown") != std::string::npos);
 }
 
 TEST(integracion_con_controlador) {

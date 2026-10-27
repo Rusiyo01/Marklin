@@ -30,39 +30,39 @@ const speedTimers = {};
 
 // ---- Tipos de función (símbolos de la CS2/MS2) ----
 const FN_TYPES = {
-  1: ["💡", "Luces"], 2: ["🔆", "Luz interior"], 3: ["🔴", "Luz trasera"], 4: ["🔦", "Luces largas"],
-  5: ["🔊", "Sonido"], 6: ["⚡", "Pantógrafo"], 7: ["💨", "Humo"], 8: ["🐢", "Maniobras"],
-  9: ["🔗", "Enganche Telex"], 10: ["📯", "Bocina"], 11: ["👮", "Silbato revisor"], 12: ["🎶", "Silbato"],
-  13: ["🔔", "Campana"], 14: ["↔", "Izquierda/derecha"], 15: ["↕", "Subir/bajar"], 16: ["↺", "Girar a la izquierda"],
-  17: ["🏗", "Brazo de grúa"], 18: ["⏱", "Inercia"], 19: ["⛽", "Bomba"], 20: ["🛑", "Chirrido de frenos"],
-  21: ["⚙", "Cambio de marcha"], 22: ["🔋", "Generador"], 23: ["🚂", "Ruido de marcha"], 24: ["⚙", "Motor"],
-  25: ["📢", "Anuncio en estación"], 26: ["⛏", "Echar carbón"], 27: ["🚪", "Cerrar puertas"], 28: ["🚪", "Abrir puertas"],
-  29: ["🌀", "Ventilador"], 30: ["🌀", "Ventilador"], 31: ["🔥", "Hogar"], 32: ["🔆", "Luz interior"],
-  33: ["💡", "Lámpara de mesa"], 34: ["💡", "Lámpara de mesa"], 35: ["💡", "Lámpara de mesa"], 36: ["🔥", "Sacudir parrilla"],
-  37: ["🛤", "Juntas de vía"], 38: ["🔢", "Número de loco"], 39: ["🎵", "Música"], 40: ["🪧", "Indicador de destino"],
-  41: ["💡", "Luz de cabina 2"], 42: ["💡", "Luz de cabina 1"], 43: ["🔗", "Enganche"], 44: ["💥", "Choque de topes"],
-  45: ["📢", "Anuncio en el tren"], 46: ["🪝", "Gancho de grúa"], 47: ["🚨", "Luz intermitente"], 48: ["💡", "Luz de cabina"],
-  49: ["💨", "Aire comprimido"],
-  82: ["🔗", "Telex trasero"], 83: ["🔗", "Telex delantero"], 84: ["⚡", "Pantógrafo trasero"], 85: ["⚡", "Pantógrafo delantero"],
-  86: ["💡", "Luz delantera (atrás)"], 87: ["💡", "Luz delantera"], 88: ["⬆", "Subir"], 89: ["🌀", "Ventilador"],
-  90: ["💡", "Luz del motor"], 91: ["♨", "Purga de vapor"], 92: ["♨", "Vapor"], 93: ["🏗", "Grúa"],
-  94: ["⬆", "Subir"], 95: ["⬇", "Bajar"], 96: ["⬅", "Izquierda"], 97: ["➡", "Derecha"],
-  98: ["↻", "Girar a la derecha"], 99: ["🧲", "Imán"], 101: ["⚡", "Pantógrafo"], 103: ["📻", "Radio"],
-  104: ["📢", "Anuncio"], 105: ["🔴", "Luz trasera (atrás)"], 106: ["💨", "Bomba de aire"], 107: ["🗣", "Voz"],
-  108: ["⚙", "Motor"], 109: ["🔇", "Sin sonido"], 110: ["💡", "Luz de escalera"], 111: ["💧", "Cargar agua"],
-  112: ["🛑", "Freno"],
+  1: ["💡", "Lights"], 2: ["🔆", "Interior light"], 3: ["🔴", "Tail light"], 4: ["🔦", "High beam"],
+  5: ["🔊", "Sound"], 6: ["⚡", "Pantograph"], 7: ["💨", "Smoke"], 8: ["🐢", "Shunting mode"],
+  9: ["🔗", "Telex coupler"], 10: ["📯", "Horn"], 11: ["👮", "Conductor whistle"], 12: ["🎶", "Whistle"],
+  13: ["🔔", "Bell"], 14: ["↔", "Left/right"], 15: ["↕", "Up/down"], 16: ["↺", "Turn left"],
+  17: ["🏗", "Crane arm"], 18: ["⏱", "Inertia"], 19: ["⛽", "Pump"], 20: ["🛑", "Brake squeal"],
+  21: ["⚙", "Gear shift"], 22: ["🔋", "Generator"], 23: ["🚂", "Running sound"], 24: ["⚙", "Engine"],
+  25: ["📢", "Station announcement"], 26: ["⛏", "Coal shovelling"], 27: ["🚪", "Close doors"], 28: ["🚪", "Open doors"],
+  29: ["🌀", "Fan"], 30: ["🌀", "Fan"], 31: ["🔥", "Firebox"], 32: ["🔆", "Interior light"],
+  33: ["💡", "Table lamp"], 34: ["💡", "Table lamp"], 35: ["💡", "Table lamp"], 36: ["🔥", "Grate shaker"],
+  37: ["🛤", "Rail joints"], 38: ["🔢", "Loco number"], 39: ["🎵", "Music"], 40: ["🪧", "Destination display"],
+  41: ["💡", "Cab light 2"], 42: ["💡", "Cab light 1"], 43: ["🔗", "Coupling"], 44: ["💥", "Buffer clash"],
+  45: ["📢", "Train announcement"], 46: ["🪝", "Crane hook"], 47: ["🚨", "Flashing light"], 48: ["💡", "Cab light"],
+  49: ["💨", "Compressed air"],
+  82: ["🔗", "Rear Telex"], 83: ["🔗", "Front Telex"], 84: ["⚡", "Rear pantograph"], 85: ["⚡", "Front pantograph"],
+  86: ["💡", "Headlight (reverse)"], 87: ["💡", "Headlight"], 88: ["⬆", "Up"], 89: ["🌀", "Fan"],
+  90: ["💡", "Engine light"], 91: ["♨", "Steam blow-off"], 92: ["♨", "Steam"], 93: ["🏗", "Crane"],
+  94: ["⬆", "Up"], 95: ["⬇", "Down"], 96: ["⬅", "Left"], 97: ["➡", "Right"],
+  98: ["↻", "Turn right"], 99: ["🧲", "Magnet"], 101: ["⚡", "Pantograph"], 103: ["📻", "Radio"],
+  104: ["📢", "Announcement"], 105: ["🔴", "Tail light (reverse)"], 106: ["💨", "Air pump"], 107: ["🗣", "Voice"],
+  108: ["⚙", "Engine"], 109: ["🔇", "Mute"], 110: ["💡", "Stairs light"], 111: ["💧", "Take water"],
+  112: ["🛑", "Brake"],
 };
 // [símbolo, nombre, momentánea] de un tipo de función.
-function fnInfo(t, n) {
-  const mom = (t & 0x80) !== 0, base = t & 0x7f;
+function fnInfo(ty, n) {
+  const mom = (ty & 0x80) !== 0, base = ty & 0x7f;
   if (base >= 50 && base <= 81) return ["", "F" + (base - 50), mom];
   const d = FN_TYPES[base];
-  return d ? [d[0], d[1], mom] : ["", "F" + n, mom];
+  return d ? [d[0], t(d[1]), mom] : ["", "F" + n, mom];
 }
 // Funciones de una loco: [{n, t}] (las del inventario o F0..F15 genéricas).
 function locoFns(ref) {
   const r = invByRef(ref), list = [];
-  if (r && r.fn && r.fn.some((t) => t)) r.fn.forEach((t, n) => t && list.push({ n, t }));
+  if (r && r.fn && r.fn.some((ty) => ty)) r.fn.forEach((ty, n) => ty && list.push({ n, t: ty }));
   else for (let n = 0; n < 16; n++) list.push({ n, t: n === 0 ? 1 : 0 });
   return list;
 }
@@ -121,18 +121,18 @@ function makeCab(i, getRef, opts) {
   c.innerHTML = `<div class="cabhead">${opts.number ? `<span class="cabn">${i + 1}</span>` : ""}
       <img class="cabimg" alt="" hidden>
       <div class="cabt"><b class="lbl"></b><small class="ref"></small></div>
-      ${opts.number ? '<button class="small rel" title="Dejar libre este mando">✕</button>' : ""}</div>
+      ${opts.number ? '<button class="small rel" title="${t("Free this throttle")}">✕</button>' : ""}</div>
     <div class="cabbody">
       <div class="speedrow"><span class="spd">0%</span><span class="dirind"></span></div>
-      <input type="range" min="0" max="1000" step="10" value="0" aria-label="Velocidad">
-      <div class="ctl"><button data-d="rev" title="Atrás (←)">◀</button><button data-st="-100" title="−10 %">−</button>
-        <button data-s class="stopb" title="Parar (Espacio)">■</button><button data-st="100" title="+10 %">+</button>
-        <button data-d="fwd" title="Adelante (→)">▶</button></div>
+      <input type="range" min="0" max="1000" step="10" value="0" aria-label="${t("Speed")}">
+      <div class="ctl"><button data-d="rev" title="${t("Reverse")} (←)">◀</button><button data-st="-100" title="−10 %">−</button>
+        <button data-s class="stopb" title="${t("Stop")} (${t("Space")})">■</button><button data-st="100" title="+10 %">+</button>
+        <button data-d="fwd" title="${t("Forward")} (→)">▶</button></div>
       <div class="fns main"></div>
-      <details class="more"><summary>Otras funciones</summary><div class="fns rest"></div></details>
+      <details class="more"><summary>${t("More functions")}</summary><div class="fns rest"></div></details>
     </div>
-    <div class="cabempty">${opts.number ? `<select class="pick" title="Elegir locomotora"></select>
-      <p>o haz clic en una locomotora del inventario<br>(también puedes arrastrarla aquí)</p>` : "<p>Elige arriba la locomotora que quieres llevar.</p>"}</div>`;
+    <div class="cabempty">${opts.number ? `<select class="pick" title="${t("Choose loco")}"></select>
+      <p>${t("or click a loco in the inventory<br>(you can also drag it here)")}</p>` : `<p>${t("Choose above the loco you want to drive.")}</p>`}</div>`;
   c._ref = getRef;
   const rng = c.querySelector("input[type=range]");
   rng.oninput = () => getRef() && setLocoSpeed(getRef(), +rng.value);
@@ -236,7 +236,7 @@ const regLocos = () => (INV.locos || []).slice().sort((a, b) => (a.label || a.na
 const opt = (ref, sel, text) => `<option value="${esc(ref)}"${ref === sel ? " selected" : ""}>${esc(text)}</option>`;
 
 function pickOptions(sel) {
-  return '<option value="">— elegir loco —</option>' + regLocos().map((l) => opt(l.ref, sel, `${l.label || l.name} (${l.ref})`)).join("");
+  return '<option value="">— ' + t("choose loco") + ' —</option>' + regLocos().map((l) => opt(l.ref, sel, `${l.label || l.name} (${l.ref})`)).join("");
 }
 // Selector de la pestaña Desvíos: primero las locos de los mandos y las que
 // están en marcha.
@@ -245,14 +245,14 @@ function swOptions(sel) {
   const moving = (state.locos || []).filter((l) => l.speed > 0 && !inCabs.includes(l.ref)).map((l) => l.ref);
   const active = inCabs.concat(moving);
   const rest = regLocos().filter((l) => !active.includes(l.ref));
-  return '<option value="">— elegir loco —</option>' +
-    (active.length ? '<optgroup label="Activas (en los mandos o en marcha)">' + active.map((r) => opt(r, sel, `${titleOf(r)} (${r})`)).join("") + "</optgroup>" : "") +
-    (rest.length ? '<optgroup label="Resto del inventario">' + rest.map((l) => opt(l.ref, sel, `${l.label || l.name} (${l.ref})`)).join("") + "</optgroup>" : "");
+  return '<option value="">— ' + t("choose loco") + ' —</option>' +
+    (active.length ? '<optgroup label="' + t("Active (on a throttle or moving)") + '">' + active.map((r) => opt(r, sel, `${titleOf(r)} (${r})`)).join("") + "</optgroup>" : "") +
+    (rest.length ? '<optgroup label="' + t("Rest of the inventory") + '">' + rest.map((l) => opt(l.ref, sel, `${l.label || l.name} (${l.ref})`)).join("") + "</optgroup>" : "");
 }
 
 function fnButton(f) {
   const [icon, name, mom] = fnInfo(f.t, f.n);
-  return `<button data-fn="${f.n}"${mom ? ' data-mom="1"' : ""} title="F${f.n} · ${esc(name)}${mom ? " (mientras se pulsa)" : ""}">` +
+  return `<button data-fn="${f.n}"${mom ? ' data-mom="1"' : ""} title="F${f.n} · ${esc(name)}${mom ? " (" + t("while pressed") + ")" : ""}">` +
     (icon ? `<i>${icon}</i>` : "") + `<small>F${f.n}</small></button>`;
 }
 
@@ -277,7 +277,7 @@ function renderCab(c, ref) {
   const speed = l ? l.speed : 0;
   if (Date.now() - (speedDrag[ref] || 0) > 1200 || !l) c.querySelector("input[type=range]").value = speed;
   c.querySelector(".spd").textContent = pct(speed);
-  c.querySelector(".dirind").textContent = !l || !l.dir ? "sentido ?" : l.dir === 1 ? "adelante ▶" : "◀ atrás";
+  c.querySelector(".dirind").textContent = !l || !l.dir ? t("direction ?") : l.dir === 1 ? t("forward") + " ▶" : "◀ " + t("reverse");
   c.querySelectorAll("[data-d]").forEach((b) => b.classList.toggle("act", !!l && ((b.dataset.d === "fwd" && l.dir === 1) || (b.dataset.d === "rev" && l.dir === 2))));
   c.querySelectorAll("[data-fn]").forEach((b) => b.classList.toggle("act", !!l && ((l.fn >>> b.dataset.fn) & 1) === 1));
 }
@@ -317,7 +317,7 @@ function renderRoster() {
   };
   const list = regLocos();
   const html = list.length ? list.map(row).join("") :
-    '<p class="dir">Aún no hay locomotoras en el inventario. Añádelas en la pestaña <b>Inventario</b> (o léelas de la MS2).</p>';
+    '<p class="dir">' + t("There are no locos in the inventory yet. Add them in the <b>Inventory</b> tab (or read them from the MS2).") + '</p>';
   if (box._html === html) return;
   box._html = html;
   box.innerHTML = html;

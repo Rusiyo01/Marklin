@@ -37,7 +37,7 @@ ESP32 se reinicia para aplicarla.
     { "id": 1005, "name": "s88_modulo1_c5" }
   ],
   "autostart": [],
-  "layout": "estacion",
+  "layout": "station",
   "setupDone": true
 }
 ```
@@ -106,7 +106,7 @@ añade las nuevas con su nombre y funciones. Ver
 ### `autostart`
 
 Lista de scripts que se arrancan solos 2,5 s después de encender el ESP32,
-por ejemplo `["puente_tren1", "puente_tren2"]` para una maqueta de
+por ejemplo `["bridge_train1", "bridge_train2"]` para una maqueta de
 exposición.
 
 > ⚠️ Con `autostart`, los trenes pueden empezar a moverse en cuanto se

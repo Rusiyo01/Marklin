@@ -38,6 +38,11 @@ de cada loco). Las locos mfx nuevas que la MS2 da de alta **se copian solas
 al inventario** con su nombre y sus funciones, como en una Central Station.
 Ver [docs/puesto-de-mando.md](docs/puesto-de-mando.md).
 
+**Idiomas:** la interfaz está en **inglés** y se cambia a **español, alemán,
+italiano o francés** con el selector de arriba a la derecha (cada navegador
+recuerda el suyo). También se traducen los mensajes que llegan del ESP32:
+avisos, errores de los scripts y el registro.
+
 **Y el iPad, como con una Central Station**: el ESP32 se presenta en la red
 como una CS2/CS3, así que **RailControl Pro** (y otras apps para la Central
 Station) se conectan a él por WiFi y manejan locos, desvíos y corriente de
@@ -149,7 +154,7 @@ goto inicio
    la MS2*: deben aparecer tus locos.
 
 5. **Primera prueba**: pulsa **GO**, en *Locomotoras* haz clic en una loco y
-   muévela. Después prueba el script `demo_tiempo` en
+   muévela. Después prueba el script `demo_time` en
    *Automático* (cambia antes la dirección de la loco).
 
 ## Documentación
@@ -178,7 +183,7 @@ firmware/
   web/                    fuentes de la aplicación web (se empaqueta con tools/build_web.py)
   layouts/                maquetas de ejemplo (generadas con tools/make_layouts.js)
   tools/                  empaquetado de la web y del instalador
-  test_host/              tests en el PC (make -C firmware/test_host; node test_layouts.js)
+  test_host/              tests en el PC (make -C firmware/test_host; node test_layouts.js; node test_i18n.js)
 installer/                página de instalación web y scripts del instalador sin conexión
 docs/                     documentación
 .github/workflows/ci.yml  tests, compilación de las tres placas, instalador, Pages y releases

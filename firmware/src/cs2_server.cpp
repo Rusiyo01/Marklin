@@ -127,7 +127,7 @@ void logRequest(const marklin::CanFrame& f) {
   char name[9];
   memcpy(name, f.data, 8);
   name[8] = 0;
-  eventLog.addf(LogKind::Info, "Red CS2: la app pide '%s'", name);
+  eventLog.addf(LogKind::Info, "CS2 network: app requests '%s'", name);
 }
 
 // Procesa una trama de una app; las respuestas propias van en `replies`.
@@ -155,10 +155,10 @@ void acceptClients() {
     clients[i].sock.setNoDelay(true);
     clients[i].len = 0;
     clients[i].active = true;
-    eventLog.addf(LogKind::Info, "Red CS2: app conectada desde %s", c.remoteIP().toString().c_str());
+    eventLog.addf(LogKind::Info, "CS2 network: app connected from %s", c.remoteIP().toString().c_str());
     return;
   }
-  eventLog.add(LogKind::Error, "Red CS2: demasiadas apps conectadas (max. 4)");
+  eventLog.add(LogKind::Error, "CS2 network: too many apps connected (max. 4)");
   c.stop();
 }
 
@@ -169,7 +169,7 @@ void pollClients() {
     if (!cl.sock.connected()) {
       cl.sock.stop();
       cl.active = false;
-      eventLog.add(LogKind::Info, "Red CS2: app desconectada");
+      eventLog.add(LogKind::Info, "CS2 network: app disconnected");
       continue;
     }
     for (int n = 0; n < 64 && cl.sock.available() > 0; n++) {
@@ -234,7 +234,7 @@ void setup() {
   server.setNoDelay(true);
   udp.begin(cs2::kUdpListenPort);
   started = true;
-  eventLog.addf(LogKind::Info, "Red CS2: Central Station en TCP %u / UDP %u (RailControl Pro)",
+  eventLog.addf(LogKind::Info, "CS2 network: Central Station on TCP %u / UDP %u (RailControl Pro)",
                 cs2::kTcpPort, cs2::kUdpListenPort);
 }
 

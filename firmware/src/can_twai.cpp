@@ -66,7 +66,7 @@ void TwaiBus::poll(uint32_t nowMs) {
 }
 
 const char* TwaiBus::stateName() const {
-  if (!started_) return "sin iniciar";
+  if (!started_) return "not started";
   switch (state_) {
     case TWAI_STATE_STOPPED: return "parado";
     case TWAI_STATE_RUNNING: return "ok";

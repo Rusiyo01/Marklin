@@ -25,38 +25,38 @@ const CT = (function () {
   function add(def) { LIB[def.art] = def; }
 
   function straight(art, L, name) {
-    add({ art, kind: "straight", name: name || `Recta ${(L / 10).toFixed(1)} cm`,
+    add({ art, kind: "straight", name: name || `Straight ${(L / 10).toFixed(1)} cm`,
       eps: [{ x: 0, y: 0, a: 180 }, { x: L, y: 0, a: 0 }],
       paths: [{ a: 0, b: 1, pts: sampleLine(0, 0, L, 0) }] });
   }
   function curve(art, rn, R, deg) {
-    add({ art, kind: "curve", name: `Curva ${rn} ${deg}°`,
+    add({ art, kind: "curve", name: `Curve ${rn} ${deg}°`,
       eps: [{ x: 0, y: 0, a: 180 }, { x: R * Math.sin(deg * D2R), y: -R * (1 - Math.cos(deg * D2R)), a: -deg }],
       paths: [{ a: 0, b: 1, pts: sampleArc(R, deg, -1) }] });
   }
   // Desvío: recorrido 0 = recto, recorrido 1 = desviado.
   function turnout(art, name, L, R, deg, side) {
     const s = side === "L" ? -1 : 1;
-    add({ art, kind: "turnout", name: `${name} ${side === "L" ? "izquierdo" : "derecho"}`,
+    add({ art, kind: "turnout", name: `${name} ${side === "L" ? "left" : "right"}`,
       eps: [{ x: 0, y: 0, a: 180 }, { x: L, y: 0, a: 0 }, { x: R * Math.sin(deg * D2R), y: s * R * (1 - Math.cos(deg * D2R)), a: s * deg }],
       paths: [{ a: 0, b: 1, pts: sampleLine(0, 0, L, 0) }, { a: 0, b: 2, pts: sampleArc(R, deg, s) }] });
   }
   // Desvío triple: recorridos 0 recto, 1 izquierda, 2 derecha.
   function threeway(art, L, R, deg) {
     const ex = R * Math.sin(deg * D2R), ey = R * (1 - Math.cos(deg * D2R));
-    add({ art, kind: "threeway", name: "Desvío triple",
+    add({ art, kind: "threeway", name: "Three-way turnout",
       eps: [{ x: 0, y: 0, a: 180 }, { x: L, y: 0, a: 0 }, { x: ex, y: -ey, a: -deg }, { x: ex, y: ey, a: deg }],
       paths: [{ a: 0, b: 1, pts: sampleLine(0, 0, L, 0) }, { a: 0, b: 2, pts: sampleArc(R, deg, -1) }, { a: 0, b: 3, pts: sampleArc(R, deg, 1) }] });
   }
   function crossing(art, L, deg, name) {
     const c = L / 2, dx = c * Math.cos(deg * D2R), dy = c * Math.sin(deg * D2R);
-    add({ art, kind: "crossing", name: name || `Cruce ${deg}°`,
+    add({ art, kind: "crossing", name: name || `Crossing ${deg}°`,
       eps: [{ x: 0, y: 0, a: 180 }, { x: L, y: 0, a: 0 }, { x: c - dx, y: dy, a: 180 - deg }, { x: c + dx, y: -dy, a: -deg }],
       paths: [{ a: 0, b: 1, pts: sampleLine(0, 0, L, 0) }, { a: 2, b: 3, pts: sampleLine(c - dx, dy, c + dx, -dy) }] });
   }
   function curvedTurnout(art, side, S0, R, deg) {
     const s = side === "L" ? -1 : 1, ex = R * Math.sin(deg * D2R), ey = s * R * (1 - Math.cos(deg * D2R));
-    add({ art, kind: "turnout", name: `Desvío curvo ${side === "L" ? "izquierdo" : "derecho"}`,
+    add({ art, kind: "turnout", name: `Curved turnout ${side === "L" ? "left" : "right"}`,
       eps: [{ x: 0, y: 0, a: 180 }, { x: ex, y: ey, a: s * deg }, { x: S0 + ex, y: ey, a: s * deg }],
       paths: [{ a: 0, b: 1, pts: sampleArc(R, deg, s) },
               { a: 0, b: 2, pts: sampleLine(0, 0, S0, 0).concat(sampleArc(R, deg, s, S0).slice(1)) }] });
@@ -64,22 +64,22 @@ const CT = (function () {
 
   [[24360, 360], [24236, 236.1], [24229, 229.3], [24188, 188.3], [24172, 171.7], [24094, 94.2],
    [24077, 77.5], [24071, 70.8], [24064, 64.3]].forEach(([a, l]) => straight(String(a), l));
-  straight("24088", 188.3, "Vía de alimentación");
+  straight("24088", 188.3, "Feeder track");
   LIB["24088"].feeder = true;
   [["24130", "R1", 360, 30], ["24115", "R1", 360, 15], ["24107", "R1", 360, 7.5], ["24230", "R2", 437.5, 30],
    ["24215", "R2", 437.5, 15], ["24224", "R2", 437.5, 24.3], ["24206", "R2", 437.5, 5.7], ["24207", "R2", 437.5, 7.5],
    ["24330", "R3", 515, 30], ["24315", "R3", 515, 15], ["24430", "R4", 579.3, 30], ["24530", "R5", 643.6, 30],
    ["24912", "R9", 1114.6, 12.1]].forEach((c) => curve(...c));
-  turnout("24611", "Desvío", 188.3, 437.5, 24.3, "L");
-  turnout("24612", "Desvío", 188.3, 437.5, 24.3, "R");
-  turnout("24711", "Desvío esbelto", 236.1, 1114.6, 12.1, "L");
-  turnout("24712", "Desvío esbelto", 236.1, 1114.6, 12.1, "R");
+  turnout("24611", "Turnout", 188.3, 437.5, 24.3, "L");
+  turnout("24612", "Turnout", 188.3, 437.5, 24.3, "R");
+  turnout("24711", "Slender turnout", 236.1, 1114.6, 12.1, "L");
+  turnout("24712", "Slender turnout", 236.1, 1114.6, 12.1, "R");
   threeway("24630", 188.3, 437.5, 24.3);
   crossing("24640", 188.3, 24.3);
   crossing("24649", 103.3, 48.6);
   // Travesía doble: cruce + dos recorridos curvos (recorridos 2 y 3).
   (function () {
-    crossing("24620", 188.3, 24.3, "Travesía doble");
+    crossing("24620", 188.3, 24.3, "Double slip");
     const d = LIB["24620"];
     d.kind = "dslip";
     const bez = (e0, e1) => {
@@ -99,7 +99,7 @@ const CT = (function () {
   curvedTurnout("24672", "R", 77.5, 360, 30);
   curvedTurnout("24771", "L", 64.3, 515, 30);
   curvedTurnout("24772", "R", 64.3, 515, 30);
-  add({ art: "24977", kind: "buffer", name: "Topera",
+  add({ art: "24977", kind: "buffer", name: "Buffer stop",
     eps: [{ x: 0, y: 0, a: 180 }, { x: 77.5, y: 0, a: 0, closed: true }],
     paths: [{ a: 0, b: 1, pts: sampleLine(0, 0, 77.5, 0) }] });
 
@@ -182,16 +182,16 @@ const CT = (function () {
     let o;
     if (/^\s*</.test(text)) {
       const m = text.match(/window\.__CTP_EMBED=(\{[\s\S]*?\});<\/script>/);
-      if (!m) throw new Error("el fichero .html no contiene ninguna maqueta");
+      if (!m) throw new Error("the .html file does not contain a layout");
       o = JSON.parse(m[1]).layout;
       if (typeof o === "string") o = JSON.parse(o);
     } else {
       o = JSON.parse(text);
     }
-    if (!o || !Array.isArray(o.pieces)) throw new Error("no es una maqueta de C-Track Planner");
+    if (!o || !Array.isArray(o.pieces)) throw new Error("not a C-Track Planner layout");
     const unknown = o.pieces.filter((p) => !LIB[p.t]).map((p) => p.t);
     o.pieces = o.pieces.filter((p) => LIB[p.t]);
-    if (!o.pieces.length) throw new Error("la maqueta no tiene vías reconocidas");
+    if (!o.pieces.length) throw new Error("the layout has no recognised track");
     delete o.bg;  // la imagen de calco no hace falta (y ocupa mucho)
     return { layout: o, unknown: [...new Set(unknown)] };
   }

@@ -110,16 +110,16 @@ TEST(identificador) {
 TEST(descripciones) {
   char buf[96];
   describeFrame(buildSpeed(0x0301, 0xC003, 400), buf, sizeof(buf));
-  CHECK_STR(buf, "Loco dcc:3 velocidad 400");
+  CHECK_STR(buf, "Loco dcc:3 speed 400");
   describeFrame(buildGo(0x0301), buf, sizeof(buf));
   CHECK(strstr(buf, "GO") != nullptr);
   describeFrame(frame(CMD_S88_EVENT, true, 0x1111, {0, 0, 0, 5, 0, 1, 0, 0}), buf, sizeof(buf));
-  CHECK_STR(buf, "R S88 modulo 0 contacto 5: 0 -> 1");
+  CHECK_STR(buf, "R S88 module 0 contact 5: 0 -> 1");
   describeFrame(frame(CMD_PING, true, 0x1111, {0x12, 0x34, 0x56, 0x78, 3, 85, 0, 0x33}), buf,
                 sizeof(buf));
   CHECK(strstr(buf, "MS2") != nullptr);
   describeFrame(frame(0x7E, false, 0x1111, {1, 2}), buf, sizeof(buf));
-  CHECK_STR(buf, "Comando 0x7E dlc 2: 01 02");
+  CHECK_STR(buf, "Command 0x7E dlc 2: 01 02");
 }
 
 TEST(controlador_velocidad_y_sentido) {

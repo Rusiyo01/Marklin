@@ -20,6 +20,8 @@ jobs:
         run: make -C firmware/test_host
       - name: Geometría e importación de maquetas
         run: node firmware/test_host/test_layouts.js
+      - name: Traducciones de la interfaz completas
+        run: node firmware/test_host/test_i18n.js
       - name: Recursos web embebidos al día
         run: python3 firmware/tools/build_web.py --check
 

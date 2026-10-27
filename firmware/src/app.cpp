@@ -130,7 +130,7 @@ void setupLocalSensors() {
     localSensors.push_back(ls);
   }
   if (!localSensors.empty())
-    eventLog.addf(LogKind::Info, "%u sensores locales (GPIO)",
+    eventLog.addf(LogKind::Info, "%u local sensors (GPIO)",
                   static_cast<unsigned>(localSensors.size()));
 }
 
@@ -158,7 +158,7 @@ void pollEstop(uint32_t now) {
   }
   if (estopRaw != estopStable && now - estopSinceMs >= 30) {
     estopStable = estopRaw;
-    if (estopStable) emergencyStop("pulsador de emergencia");
+    if (estopStable) emergencyStop("emergency button");
   }
 }
 
@@ -171,23 +171,23 @@ void setupWifi() {
   // IP que tiene en casa, aunque marklin.local no funcione en ese equipo.
   WiFi.mode(config.wifiMode == "sta" ? WIFI_AP_STA : WIFI_AP);
   WiFi.softAP(config.apSsid.c_str(), config.apPassword.empty() ? nullptr : config.apPassword.c_str());
-  eventLog.addf(LogKind::Info, "WiFi: red propia '%s', IP %s", config.apSsid.c_str(),
+  eventLog.addf(LogKind::Info, "WiFi: own network '%s', IP %s", config.apSsid.c_str(),
                 WiFi.softAPIP().toString().c_str());
   // Portal cautivo: en la red propia cualquier dirección lleva a la interfaz.
   captivePortal = dnsServer.start(53, "*", WiFi.softAPIP());
   if (config.wifiMode == "sta") {
     WiFi.setAutoReconnect(true);
     WiFi.begin(config.staSsid.c_str(), config.staPassword.c_str());
-    eventLog.addf(LogKind::Info, "WiFi: conectando a '%s'...", config.staSsid.c_str());
+    eventLog.addf(LogKind::Info, "WiFi: connecting to '%s'...", config.staSsid.c_str());
     const uint32_t t0 = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - t0 < 15000) delay(100);
     connected = WiFi.status() == WL_CONNECTED;
     if (connected)
-      eventLog.addf(LogKind::Info, "WiFi: conectado a '%s', IP %s", config.staSsid.c_str(),
+      eventLog.addf(LogKind::Info, "WiFi: connected to '%s', IP %s", config.staSsid.c_str(),
                     WiFi.localIP().toString().c_str());
     else
       eventLog.addf(LogKind::Error,
-                    "WiFi: no se pudo conectar a '%s' (sigue intentandolo; ¿contraseña? ¿red de 2,4 GHz?)",
+                    "WiFi: could not connect to '%s' (still trying; password? 2.4 GHz network?)",
                     config.staSsid.c_str());
   }
   WiFi.setSleep(false);
@@ -205,9 +205,9 @@ void bootSequence(uint32_t now) {
     if (config.gleisboxInit == "always" ||
         (config.gleisboxInit == "auto" && !controller.ms2Present())) {
       controller.startGleisbox(config.protocolMask);
-      eventLog.add(LogKind::Info, "Gleisbox: enviada secuencia de arranque (sin MS2 detectada)");
+      eventLog.add(LogKind::Info, "Gleisbox: start sequence sent (no MS2 detected)");
     } else if (controller.ms2Present()) {
-      eventLog.add(LogKind::Info, "MS2 detectada en el bus: trabajando junto a ella");
+      eventLog.add(LogKind::Info, "MS2 detected on the bus: working alongside it");
     }
     controller.queryTrackPower();
   }
@@ -216,7 +216,7 @@ void bootSequence(uint32_t now) {
     for (const auto& name : config.autostart) {
       String err;
       if (!startScript(name.c_str(), &err))
-        eventLog.addf(LogKind::Error, "autoarranque '%s': %s", name.c_str(), err.c_str());
+        eventLog.addf(LogKind::Error, "autostart '%s': %s", name.c_str(), err.c_str());
     }
   }
 }
@@ -229,13 +229,13 @@ void emergencyStop(const char* reason) {
   controller.setTrackPower(false);
   engine.stopAll();
   controller.stopAllLocos();
-  eventLog.addf(LogKind::Error, "PARADA DE EMERGENCIA: %s", reason);
+  eventLog.addf(LogKind::Error, "EMERGENCY STOP: %s", reason);
 }
 
 bool startScript(const String& name, String* error) {
   String src;
   if (!scripts::read(name, &src)) {
-    *error = "no existe el script '" + name + "'";
+    *error = "script '" + name + "' does not exist";
     return false;
   }
   std::string err;
@@ -281,9 +281,9 @@ void scheduleRestart(uint32_t delayMs) {
 void appSetup() {
   Serial.begin(115200);
   delay(300);
-  eventLog.add(LogKind::Info, "Marklin ESP32: control automatico por CAN (Gleisbox/MS2)");
+  eventLog.add(LogKind::Info, "Marklin ESP32: automatic control over CAN (Gleisbox/MS2)");
 
-  if (!LittleFS.begin(true)) eventLog.add(LogKind::Error, "LittleFS no disponible");
+  if (!LittleFS.begin(true)) eventLog.add(LogKind::Error, "LittleFS not available");
   String err;
   if (!loadConfig(&config, &err)) eventLog.addf(LogKind::Info, "config: %s", err.c_str());
   scripts::installDefaults();
@@ -297,10 +297,10 @@ void appSetup() {
   for (const auto& l : config.locos) controller.setLocoName(l.uid, l.name.c_str());
 
   if (canBus.begin(config.canTxPin, config.canRxPin))
-    eventLog.addf(LogKind::Info, "CAN: 250 kbit/s en TX=GPIO%d RX=GPIO%d, hash 0x%04X",
+    eventLog.addf(LogKind::Info, "CAN: 250 kbit/s on TX=GPIO%d RX=GPIO%d, hash 0x%04X",
                   config.canTxPin, config.canRxPin, controller.hash());
   else
-    eventLog.add(LogKind::Error, "CAN: no se pudo iniciar el controlador TWAI");
+    eventLog.add(LogKind::Error, "CAN: could not start the TWAI controller");
 
   setupLocalSensors();
   activateLayout(config.layout);

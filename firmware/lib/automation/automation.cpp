@@ -265,19 +265,19 @@ Program compile(const std::string& source, Host* host) {
     if (findAlias(locos, tok, uid)) return true;
     if (host && host->resolveLoco(tok, uid)) return true;
     if (parseLocoRef(tok, uid)) return true;
-    fail("loco desconocida: '" + tok + "' (usa un alias definido con 'loco' o p.ej. mm2:24, dcc:3, mfx:5)");
+    fail("unknown loco: '" + tok + "' (use an alias defined with 'loco' or e.g. mm2:24, dcc:3, mfx:5)");
     return false;
   };
   auto sensor = [&](const std::string& tok, uint32_t* id) {
     if (findAlias(sensors, tok, id)) return true;
     if (host && host->resolveSensor(tok, id)) return true;
     if (parseNumber(tok, id)) return true;
-    fail("sensor desconocido: '" + tok + "'");
+    fail("unknown sensor: '" + tok + "'");
     return false;
   };
   auto duration = [&](const std::string& tok, uint32_t* ms) {
     if (parseDuration(tok, ms)) return true;
-    fail("duracion no valida: '" + tok + "' (ej. 500ms, 2s, 1.5m)");
+    fail("invalid duration: '" + tok + "' (e.g. 500ms, 2s, 1.5m)");
     return false;
   };
   auto addFixup = [&](char field, const std::string& label) {
@@ -305,7 +305,7 @@ Program compile(const std::string& source, Host* host) {
     bool emit = true;
     auto need = [&](size_t count, const char* usage) {
       if (n != count) {
-        fail(std::string("uso: ") + usage);
+        fail(std::string("usage: ") + usage);
         return false;
       }
       return true;
@@ -314,31 +314,31 @@ Program compile(const std::string& source, Host* host) {
     if (kw == "loco") {
       emit = false;
       if (n != 2 && n != 3) {
-        fail("uso: loco <nombre> <protocolo> <direccion>  (ej. loco tren1 mm2 24)");
+        fail("usage: loco <name> <protocol> <address>  (e.g. loco train1 mm2 24)");
       } else if (!isIdentifier(t[1])) {
-        fail("nombre de loco no valido: '" + t[1] + "'");
+        fail("invalid loco name: '" + t[1] + "'");
       } else {
         const std::string ref = n == 3 ? t[2] + ":" + t[3] : t[2];
         uint32_t uid;
         if (parseLocoRef(ref, &uid))
           locos.push_back({t[1], uid});
         else
-          fail("direccion de loco no valida: '" + ref + "'");
+          fail("invalid loco address: '" + ref + "'");
       }
     } else if (kw == "sensor") {
       emit = false;
       uint32_t id;
-      if (!need(2, "sensor <nombre> <numero>")) {
+      if (!need(2, "sensor <name> <number>")) {
       } else if (!isIdentifier(t[1])) {
-        fail("nombre de sensor no valido: '" + t[1] + "'");
+        fail("invalid sensor name: '" + t[1] + "'");
       } else if (!parseNumber(t[2], &id)) {
-        fail("numero de sensor no valido: '" + t[2] + "'");
+        fail("invalid sensor number: '" + t[2] + "'");
       } else {
         sensors.push_back({t[1], id});
       }
     } else if (kw == "power" || kw == "corriente") {
       in.op = Op::Power;
-      if (need(1, "power on|off") && !parseOnOff(t[1], &in.b)) fail("se esperaba on u off");
+      if (need(1, "power on|off") && !parseOnOff(t[1], &in.b)) fail("expected on or off");
     } else if (kw == "go") {
       in.op = Op::Power;
       in.b = 1;
@@ -347,27 +347,27 @@ Program compile(const std::string& source, Host* host) {
       in.op = Op::Speed;
       if (need(2, "speed <loco> <0-1000 | 0-100%>") && loco(t[1], &in.a) &&
           !parseSpeed(t[2], &in.b))
-        fail("velocidad no valida: '" + t[2] + "' (0-1000 o 0-100%)");
+        fail("invalid speed: '" + t[2] + "' (0-1000 or 0-100%)");
     } else if (kw == "ramp" || kw == "rampa") {
       in.op = Op::Ramp;
       uint32_t ms;
-      if (need(3, "ramp <loco> <velocidad> <duracion>") && loco(t[1], &in.a)) {
+      if (need(3, "ramp <loco> <speed> <duration>") && loco(t[1], &in.a)) {
         if (!parseSpeed(t[2], &in.b))
-          fail("velocidad no valida: '" + t[2] + "'");
+          fail("invalid speed: '" + t[2] + "'");
         else if (duration(t[3], &ms))
           in.c = static_cast<int32_t>(ms);
       }
     } else if (kw == "dir" || kw == "sentido") {
       in.op = Op::Dir;
       if (need(2, "dir <loco> fwd|rev|toggle") && loco(t[1], &in.a) && !parseDir(t[2], &in.b))
-        fail("sentido no valido: '" + t[2] + "' (fwd, rev o toggle)");
+        fail("invalid direction: '" + t[2] + "' (fwd, rev or toggle)");
     } else if (kw == "func" || kw == "fn" || kw == "funcion") {
       in.op = Op::Func;
       if (need(3, "func <loco> <0-31> on|off") && loco(t[1], &in.a)) {
         if (!parseFunction(t[2], &in.b))
-          fail("funcion no valida: '" + t[2] + "' (0-31 o f0-f31)");
+          fail("invalid function: '" + t[2] + "' (0-31 or f0-f31)");
         else if (!parseOnOff(t[3], &in.c))
-          fail("se esperaba on u off");
+          fail("expected on or off");
       }
     } else if (kw == "estop" || kw == "emergencia") {
       in.op = Op::EStop;
@@ -378,39 +378,39 @@ Program compile(const std::string& source, Host* host) {
     } else if (kw == "switch" || kw == "turnout" || kw == "signal" || kw == "desvio" ||
                kw == "senal") {
       in.op = Op::Switch;
-      if (need(2, "switch <direccion> straight|round|yellow|white")) {
+      if (need(2, "switch <address> straight|round|yellow|white")) {
         if (!parseAccessoryRef(t[1], &in.a) && !(host && host->resolveAccessory(t[1], &in.a)))
-          fail("desvio desconocido: '" + t[1] + "' (ej. 5, mm:5, dcc:12 o un nombre de la maqueta)");
+          fail("unknown turnout: '" + t[1] + "' (e.g. 5, mm:5, dcc:12 or a name from the layout)");
         else if (!parsePosition(t[2], &in.b))
-          fail("posicion no valida: '" + t[2] + "' (straight/recto, round/desviado, yellow, white)");
+          fail("invalid position: '" + t[2] + "' (straight, round, yellow, white)");
       }
     } else if (kw == "wait" || kw == "esperar") {
       if (n >= 1 && t[1] == "random") {
         in.op = Op::WaitRandom;
         uint32_t lo, hi;
         if (need(3, "wait random <min> <max>") && duration(t[2], &lo) && duration(t[3], &hi)) {
-          if (hi < lo) fail("en 'wait random' el maximo debe ser >= minimo");
+          if (hi < lo) fail("in 'wait random' the maximum must be >= the minimum");
           in.b = static_cast<int32_t>(lo);
           in.c = static_cast<int32_t>(hi);
         }
       } else if (n >= 1 && t[1] == "sensor") {
         in.op = Op::WaitSensor;
-        const char* usage = "wait sensor <sensor> on|off [timeout <duracion> [else <etiqueta>]]";
+        const char* usage = "wait sensor <sensor> on|off [timeout <duration> [else <label>]]";
         if (n != 3 && n != 5 && n != 7) {
-          fail(std::string("uso: ") + usage);
+          fail(std::string("usage: ") + usage);
         } else if (sensor(t[2], &in.a)) {
           if (!parseOnOff(t[3], &in.b)) {
-            fail("se esperaba on u off");
+            fail("expected on or off");
           } else if (n >= 5) {
             uint32_t ms;
             if (t[4] != "timeout") {
-              fail(std::string("uso: ") + usage);
+              fail(std::string("usage: ") + usage);
             } else if (duration(t[5], &ms)) {
-              if (ms == 0) fail("el timeout debe ser mayor que 0");
+              if (ms == 0) fail("the timeout must be greater than 0");
               in.c = static_cast<int32_t>(ms);
               if (n == 7) {
                 if (t[6] != "else")
-                  fail(std::string("uso: ") + usage);
+                  fail(std::string("usage: ") + usage);
                 else
                   addFixup('d', t[7]);
               }
@@ -420,42 +420,42 @@ Program compile(const std::string& source, Host* host) {
       } else {
         in.op = Op::Wait;
         uint32_t ms;
-        if (need(1, "wait <duracion> | wait sensor ... | wait random ...") && duration(t[1], &ms))
+        if (need(1, "wait <duration> | wait sensor ... | wait random ...") && duration(t[1], &ms))
           in.b = static_cast<int32_t>(ms);
       }
     } else if (kw == "label" || kw == "etiqueta") {
       emit = false;
-      if (need(1, "label <nombre>")) {
+      if (need(1, "label <name>")) {
         if (!isIdentifier(t[1])) {
-          fail("nombre de etiqueta no valido: '" + t[1] + "'");
+          fail("invalid label name: '" + t[1] + "'");
         } else {
           for (const auto& l : labels)
-            if (l.name == t[1]) fail("etiqueta repetida: '" + t[1] + "'");
+            if (l.name == t[1]) fail("duplicated label: '" + t[1] + "'");
           labels.push_back({t[1], static_cast<int>(p.code.size())});
         }
       }
     } else if (kw == "goto" || kw == "ir") {
       in.op = Op::Goto;
-      if (need(1, "goto <etiqueta>")) addFixup('b', t[1]);
+      if (need(1, "goto <label>")) addFixup('b', t[1]);
     } else if (kw == "if" || kw == "si") {
       if (n >= 1 && t[1] == "sensor") {
         in.op = Op::IfSensor;
-        if (need(5, "if sensor <sensor> on|off goto <etiqueta>") && sensor(t[2], &in.a)) {
+        if (need(5, "if sensor <sensor> on|off goto <label>") && sensor(t[2], &in.a)) {
           if (!parseOnOff(t[3], &in.b))
-            fail("se esperaba on u off");
+            fail("expected on or off");
           else if (t[4] != "goto")
-            fail("uso: if sensor <sensor> on|off goto <etiqueta>");
+            fail("usage: if sensor <sensor> on|off goto <label>");
           else
             addFixup('c', t[5]);
         }
       } else if (n >= 1 && t[1] == "chance") {
         in.op = Op::IfChance;
         uint32_t pct;
-        if (need(4, "if chance <1-100> goto <etiqueta>")) {
+        if (need(4, "if chance <1-100> goto <label>")) {
           if (!parseNumber(t[2], &pct) || pct > 100)
-            fail("porcentaje no valido: '" + t[2] + "'");
+            fail("invalid percentage: '" + t[2] + "'");
           else if (t[3] != "goto")
-            fail("uso: if chance <1-100> goto <etiqueta>");
+            fail("usage: if chance <1-100> goto <label>");
           else {
             in.b = static_cast<int32_t>(pct);
             addFixup('c', t[4]);
@@ -463,17 +463,17 @@ Program compile(const std::string& source, Host* host) {
         }
       } else if (n >= 1 && t[1] == "locked") {
         in.op = Op::IfLocked;
-        if (need(4, "if locked <bloqueo> goto <etiqueta>")) {
+        if (need(4, "if locked <lock> goto <label>")) {
           if (t[3] != "goto") {
-            fail("uso: if locked <bloqueo> goto <etiqueta>");
+            fail("usage: if locked <lock> goto <label>");
           } else {
             in.text = t[2];
             addFixup('c', t[4]);
           }
         }
       } else {
-        fail("uso: if sensor <s> on|off goto <etiqueta> | if chance <1-100> goto <etiqueta> | "
-             "if locked <bloqueo> goto <etiqueta>");
+        fail("usage: if sensor <s> on|off goto <label> | if chance <1-100> goto <label> | "
+             "if locked <lock> goto <label>");
       }
     } else if (kw == "repeat" || kw == "repetir") {
       in.op = Op::Repeat;
@@ -484,16 +484,16 @@ Program compile(const std::string& source, Host* host) {
         if (parseNumber(t[1], &count) && count < 1000000)
           in.b = static_cast<int32_t>(count);
         else
-          fail("numero de repeticiones no valido: '" + t[1] + "'");
+          fail("invalid repeat count: '" + t[1] + "'");
       } else {
-        fail("uso: repeat [veces]");
+        fail("usage: repeat [times]");
       }
       repeatStack.push_back(static_cast<int>(p.code.size()));
     } else if (kw == "end" || kw == "fin") {
       in.op = Op::EndRepeat;
       if (!need(0, "end")) {
       } else if (repeatStack.empty()) {
-        fail("'end' sin 'repeat'");
+        fail("'end' without 'repeat'");
       } else {
         const int start = repeatStack.back();
         repeatStack.pop_back();
@@ -502,10 +502,10 @@ Program compile(const std::string& source, Host* host) {
       }
     } else if (kw == "lock" || kw == "reservar") {
       in.op = Op::Lock;
-      if (need(1, "lock <nombre>")) in.text = t[1];
+      if (need(1, "lock <name>")) in.text = t[1];
     } else if (kw == "unlock" || kw == "liberar") {
       in.op = Op::Unlock;
-      if (need(1, "unlock <nombre>")) in.text = t[1];
+      if (need(1, "unlock <name>")) in.text = t[1];
     } else if (kw == "log" || kw == "print") {
       in.op = Op::Log;
       // Texto original (con mayúsculas), sin la palabra clave ni comillas.
@@ -523,7 +523,7 @@ Program compile(const std::string& source, Host* host) {
       in.op = Op::Exit;
       need(0, "exit");
     } else {
-      fail("orden desconocida: '" + orig[0] + "'");
+      fail("unknown command: '" + orig[0] + "'");
     }
 
     if (emit && p.ok()) p.code.push_back(in);
@@ -531,7 +531,7 @@ Program compile(const std::string& source, Host* host) {
 
   if (p.ok() && !repeatStack.empty()) {
     lineNo = p.code[repeatStack.back()].line;
-    fail("falta 'end' para este 'repeat'");
+    fail("missing 'end' for this 'repeat'");
   }
   if (p.ok()) {
     for (const auto& f : fixups) {
@@ -540,7 +540,7 @@ Program compile(const std::string& source, Host* host) {
         if (l.name == f.label) target = l.index;
       if (target < 0) {
         lineNo = f.line;
-        fail("etiqueta no definida: '" + f.label + "'");
+        fail("undefined label: '" + f.label + "'");
         break;
       }
       Instr& in = p.code[f.instr];
@@ -557,11 +557,11 @@ Program compile(const std::string& source, Host* host) {
 
 const char* runStateName(RunState s) {
   switch (s) {
-    case RunState::Idle: return "libre";
-    case RunState::Running: return "ejecutando";
-    case RunState::Waiting: return "esperando";
-    case RunState::Finished: return "terminado";
-    case RunState::Stopped: return "detenido";
+    case RunState::Idle: return "idle";
+    case RunState::Running: return "running";
+    case RunState::Waiting: return "waiting";
+    case RunState::Finished: return "finished";
+    case RunState::Stopped: return "stopped";
     case RunState::Error: return "error";
   }
   return "?";
@@ -588,7 +588,7 @@ int Runner::line() const {
 
 std::string Runner::activity(uint32_t now) const {
   if (!active()) return message_.empty() ? runStateName(state_) : message_;
-  if (wait_ == WaitKind::None) return "ejecutando";
+  if (wait_ == WaitKind::None) return "running";
   const Instr* in = (waitInstr_ >= 0 && waitInstr_ < static_cast<int>(prog_.code.size()))
                         ? &prog_.code[waitInstr_]
                         : nullptr;
@@ -596,26 +596,26 @@ std::string Runner::activity(uint32_t now) const {
   char buf[96];
   switch (wait_) {
     case WaitKind::Time:
-      snprintf(buf, sizeof(buf), "esperando %.1f s de %.1f s", elapsed / 1000.0, waitMs_ / 1000.0);
+      snprintf(buf, sizeof(buf), "waiting %.1f s of %.1f s", elapsed / 1000.0, waitMs_ / 1000.0);
       return buf;
     case WaitKind::Sensor:
-      if (!in) return "esperando sensor";
+      if (!in) return "waiting for sensor";
       if (in->c > 0)
-        snprintf(buf, sizeof(buf), "esperando sensor %lu %s (%lu s / timeout %lu s)",
+        snprintf(buf, sizeof(buf), "waiting for sensor %lu %s (%lu s / timeout %lu s)",
                  static_cast<unsigned long>(in->a), in->b ? "on" : "off",
                  static_cast<unsigned long>(elapsed / 1000), static_cast<unsigned long>(in->c / 1000));
       else
-        snprintf(buf, sizeof(buf), "esperando sensor %lu %s (%lu s)", static_cast<unsigned long>(in->a),
+        snprintf(buf, sizeof(buf), "waiting for sensor %lu %s (%lu s)", static_cast<unsigned long>(in->a),
                  in->b ? "on" : "off", static_cast<unsigned long>(elapsed / 1000));
       return buf;
     case WaitKind::Lock:
-      return in ? "esperando bloqueo '" + in->text + "'" : "esperando bloqueo";
+      return in ? "waiting for lock '" + in->text + "'" : "waiting for lock";
     case WaitKind::Ramp:
-      snprintf(buf, sizeof(buf), "rampa de velocidad %ld -> %ld", static_cast<long>(rampFrom_),
+      snprintf(buf, sizeof(buf), "speed ramp %ld -> %ld", static_cast<long>(rampFrom_),
                static_cast<long>(rampTo_));
       return buf;
     default:
-      return "esperando";
+      return "waiting";
   }
 }
 
@@ -671,13 +671,13 @@ bool Runner::checkWait(Engine& eng, Host& host, int slot) {
       } else if (in->c > 0 && elapsed >= static_cast<uint32_t>(in->c)) {
         wait_ = WaitKind::None;
         if (in->d >= 0) {
-          host.log(name_, "timeout del sensor " + toStr(static_cast<long>(in->a)) +
-                              " (linea " + toStr(in->line) + "), salto a la etiqueta");
+          host.log(name_, "sensor " + toStr(static_cast<long>(in->a)) +
+                              " timeout (line " + toStr(in->line) + "), jumping to the label");
           state_ = RunState::Running;
           jump(in->d);
           return true;
         }
-        fail("timeout esperando el sensor " + toStr(static_cast<long>(in->a)) + " (linea " +
+        fail("timeout waiting for sensor " + toStr(static_cast<long>(in->a)) + " (line " +
              toStr(in->line) + ")");
         return false;
       }
@@ -717,7 +717,7 @@ bool Runner::checkWait(Engine& eng, Host& host, int slot) {
 bool Runner::step(Engine& eng, Host& host, int slot, int* actions) {
   if (pc_ < 0 || pc_ >= static_cast<int>(prog_.code.size())) {
     state_ = RunState::Finished;
-    message_ = "terminado";
+    message_ = "finished";
     return false;
   }
   const Instr& in = prog_.code[pc_];
@@ -850,7 +850,7 @@ bool Runner::step(Engine& eng, Host& host, int slot, int* actions) {
       return true;
     case Op::Exit:
       state_ = RunState::Finished;
-      message_ = "terminado (exit)";
+      message_ = "finished (exit)";
       return false;
   }
   pc_++;
@@ -879,21 +879,21 @@ void Runner::tick(Engine& eng, Host& host, int slot) {
 int Engine::start(const std::string& name, const std::string& source, std::string* error) {
   Program prog = compile(source, host_);
   if (!prog.ok()) {
-    if (error) *error = "linea " + toStr(prog.errorLine) + ": " + prog.error;
+    if (error) *error = "line " + toStr(prog.errorLine) + ": " + prog.error;
     return -1;
   }
   if (isRunning(name)) {
-    if (error) *error = "el script '" + name + "' ya esta en marcha";
+    if (error) *error = "script '" + name + "' is already running";
     return -1;
   }
   for (int i = 0; i < kMaxRunners; i++) {
     if (!runners_[i].active()) {
       runners_[i].begin(name, std::move(prog), host_->nowMs());
-      host_->log(name, "iniciado");
+      host_->log(name, "started");
       return i;
     }
   }
-  if (error) *error = "no hay huecos libres (maximo " + toStr(kMaxRunners) + " scripts a la vez)";
+  if (error) *error = "no free slots (max. " + toStr(kMaxRunners) + " scripts at once)";
   return -1;
 }
 
@@ -910,7 +910,7 @@ void Engine::abort(int slot, RunState finalState, const std::string& msg) {
 
 bool Engine::stop(int slot) {
   if (slot < 0 || slot >= kMaxRunners || !runners_[slot].active()) return false;
-  abort(slot, RunState::Stopped, "detenido");
+  abort(slot, RunState::Stopped, "stopped");
   return true;
 }
 
@@ -966,8 +966,8 @@ std::string Engine::exec(const std::string& line) {
       case Op::Switch: host_->switchAccessory(in.a, static_cast<uint8_t>(in.b)); break;
       case Op::Log: host_->log("cmd", in.text); break;
       default:
-        return "orden no permitida en modo inmediato (usa un script para esperas, saltos, "
-               "rampas o bloqueos)";
+        return "command not allowed in immediate mode (use a script for waits, jumps, "
+               "ramps or locks)";
     }
   }
   return "";

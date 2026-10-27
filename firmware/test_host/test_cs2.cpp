@@ -151,7 +151,7 @@ TEST(cs2_desvios_y_plano) {
   CHECK(contains(f, "artikel\n .id=1\n .name=entrada\n .typ=linksweiche\n"));
   CHECK(contains(f, " .id=2\n .name=salida\n .typ=rechtsweiche\n .stellung=0\n .schaltzeit=200\n .dectyp=dcc\n"));
   CHECK(cs2::configFile("gbs", m, &f));
-  CHECK(contains(f, "seite\n .name=Maqueta\n"));
+  CHECK(contains(f, "seite\n .name=Layout\n"));
   CHECK(cs2::configFile("gbs-0", m, &f));
   CHECK(contains(f, "element\n .id=0x101\n .typ=linksweiche\n .artikel=1\n .text=entrada\n"));
   CHECK(contains(f, " .id=0x105\n .typ=rechtsweiche\n .artikel=2\n"));

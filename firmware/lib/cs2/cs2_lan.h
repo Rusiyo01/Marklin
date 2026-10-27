@@ -73,7 +73,7 @@ struct Model {
   std::vector<LocoEntry> locos;
   std::vector<ArticleEntry> articles;
   std::vector<ContactEntry> contacts;
-  std::string pageName = "Maqueta";
+  std::string pageName = "Layout";
 };
 
 std::string lokomotiveCs2(const std::vector<LocoEntry>& locos);

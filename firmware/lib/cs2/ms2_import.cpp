@@ -247,7 +247,7 @@ void Ms2Importer::handleFrame(const CanFrame& f, uint32_t nowMs) {
   if (!busy() || !rx_.feed(f)) return;
   sentMs_ = nowMs;
   retries_ = 0;
-  if (rx_.compressed()) return fail("la MS2 respondio en un formato no soportado");
+  if (rx_.compressed()) return fail("the MS2 answered in an unsupported format");
   fileReceived(rx_.text());
 }
 
@@ -292,7 +292,7 @@ void Ms2Importer::tick(uint32_t nowMs) {
     requestInfo();
     return;
   }
-  fail("la MS2 no responde (¿esta conectada a la Gleisbox?)");
+  fail("the MS2 does not answer (is it connected to the Gleisbox?)");
 }
 
 void Ms2Importer::fail(const char* why) {

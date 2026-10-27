@@ -196,17 +196,17 @@ const char* deviceTypeName(uint16_t type, uint32_t uid) {
     case 0x0040: return "Link S88";
     case 0xEEEE: return "CS2 software";
     case 0xFFF0:
-    case 0xFFFF: return "CS2/CS3 (maestro)";
-    default: return "desconocido";
+    case 0xFFFF: return "CS2/CS3 (master)";
+    default: return "unknown";
   }
 }
 
 static const char* dirName(uint8_t d) {
   switch (d) {
-    case DIR_KEEP: return "igual";
-    case DIR_FORWARD: return "adelante";
-    case DIR_REVERSE: return "atras";
-    case DIR_TOGGLE: return "cambiar";
+    case DIR_KEEP: return "keep";
+    case DIR_FORWARD: return "forward";
+    case DIR_REVERSE: return "reverse";
+    case DIR_TOGGLE: return "toggle";
     default: return "?";
   }
 }
@@ -221,67 +221,67 @@ void describeFrame(const CanFrame& f, char* out, size_t len) {
   switch (cmd) {
     case CMD_SYSTEM: {
       if (f.dlc < 5) {
-        snprintf(out, len, "%sSistema: consulta estado", r);
+        snprintf(out, len, "%sSystem: status query", r);
         return;
       }
       const uint8_t sub = f.data[4];
       switch (sub) {
-        case SYS_STOP: snprintf(out, len, "%sSistema: STOP (sin corriente)", r); return;
-        case SYS_GO: snprintf(out, len, "%sSistema: GO (corriente en via)", r); return;
-        case SYS_HALT: snprintf(out, len, "%sSistema: HALT (locos paradas)", r); return;
+        case SYS_STOP: snprintf(out, len, "%sSystem: STOP (no track power)", r); return;
+        case SYS_GO: snprintf(out, len, "%sSystem: GO (track power on)", r); return;
+        case SYS_HALT: snprintf(out, len, "%sSystem: HALT (locos stopped)", r); return;
         case SYS_LOCO_EMERGENCY:
-          snprintf(out, len, "%sSistema: parada emergencia loco %s", r, uid ? loco : "todas");
+          snprintf(out, len, "%sSystem: emergency stop loco %s", r, uid ? loco : "all");
           return;
         case SYS_ENABLE_PROTOCOLS:
-          snprintf(out, len, "%sSistema: habilitar protocolos 0x%02X", r,
+          snprintf(out, len, "%sSystem: enable protocols 0x%02X", r,
                    f.dlc > 5 ? f.data[5] : 0);
           return;
         case SYS_OVERLOAD:
-          snprintf(out, len, "%sSistema: SOBRECARGA canal %u", r, f.dlc > 5 ? f.data[5] : 0);
+          snprintf(out, len, "%sSystem: OVERLOAD channel %u", r, f.dlc > 5 ? f.data[5] : 0);
           return;
         default:
-          snprintf(out, len, "%sSistema: subcomando 0x%02X uid 0x%08lX", r, sub,
+          snprintf(out, len, "%sSystem: subcommand 0x%02X uid 0x%08lX", r, sub,
                    static_cast<unsigned long>(uid));
           return;
       }
     }
     case CMD_LOCO_SPEED:
       if (f.dlc >= 6)
-        snprintf(out, len, "%sLoco %s velocidad %u", r, loco, readBe16(f.data + 4));
+        snprintf(out, len, "%sLoco %s speed %u", r, loco, readBe16(f.data + 4));
       else
-        snprintf(out, len, "%sLoco %s consulta velocidad", r, loco);
+        snprintf(out, len, "%sLoco %s speed query", r, loco);
       return;
     case CMD_LOCO_DIRECTION:
       if (f.dlc >= 5)
-        snprintf(out, len, "%sLoco %s sentido %s", r, loco, dirName(f.data[4]));
+        snprintf(out, len, "%sLoco %s direction %s", r, loco, dirName(f.data[4]));
       else
-        snprintf(out, len, "%sLoco %s consulta sentido", r, loco);
+        snprintf(out, len, "%sLoco %s direction query", r, loco);
       return;
     case CMD_LOCO_FUNCTION:
       if (f.dlc >= 6)
         snprintf(out, len, "%sLoco %s F%u = %u", r, loco, f.data[4], f.data[5]);
       else if (f.dlc == 5)
-        snprintf(out, len, "%sLoco %s consulta F%u", r, loco, f.data[4]);
+        snprintf(out, len, "%sLoco %s query F%u", r, loco, f.data[4]);
       else
-        snprintf(out, len, "%sLoco funcion (dlc %u)", r, f.dlc);
+        snprintf(out, len, "%sLoco function (dlc %u)", r, f.dlc);
       return;
     case CMD_ACCESSORY: {
       Protocol p;
       uint32_t a;
       if (f.dlc >= 6 && decodeAccessoryUid(uid, &p, &a))
-        snprintf(out, len, "%sAccesorio %s:%lu posicion %u corriente %u", r,
+        snprintf(out, len, "%sAccessory %s:%lu position %u current %u", r,
                  p == Protocol::DCC ? "dcc" : "mm", static_cast<unsigned long>(a),
                  f.data[4], f.data[5]);
       else
-        snprintf(out, len, "%sAccesorio uid 0x%08lX", r, static_cast<unsigned long>(uid));
+        snprintf(out, len, "%sAccessory uid 0x%08lX", r, static_cast<unsigned long>(uid));
       return;
     }
     case CMD_S88_EVENT:
       if (f.dlc >= 6)
-        snprintf(out, len, "%sS88 modulo %u contacto %u: %u -> %u", r, readBe16(f.data),
+        snprintf(out, len, "%sS88 module %u contact %u: %u -> %u", r, readBe16(f.data),
                  readBe16(f.data + 2), f.data[4], f.data[5]);
       else
-        snprintf(out, len, "%sS88 consulta modulo %u contacto %u", r,
+        snprintf(out, len, "%sS88 query module %u contact %u", r,
                  f.dlc >= 2 ? readBe16(f.data) : 0, f.dlc >= 4 ? readBe16(f.data + 2) : 0);
       return;
     case CMD_PING:
@@ -294,19 +294,19 @@ void describeFrame(const CanFrame& f, char* out, size_t len) {
       return;
     case CMD_BOOTLOADER:
       if (f.dlc == 5 && f.data[4] == 0x11)
-        snprintf(out, len, "%sArranque Gleisbox (bootloader GO)", r);
+        snprintf(out, len, "%sGleisbox start (bootloader GO)", r);
       else
         snprintf(out, len, "%sBootloader (dlc %u)", r, f.dlc);
       return;
-    case CMD_LOCO_DISCOVERY: snprintf(out, len, "%sDescubrimiento loco", r); return;
+    case CMD_LOCO_DISCOVERY: snprintf(out, len, "%sLoco discovery", r); return;
     case CMD_MFX_BIND: snprintf(out, len, "%sMFX bind", r); return;
     case CMD_MFX_VERIFY: snprintf(out, len, "%sMFX verify", r); return;
-    case CMD_READ_CONFIG: snprintf(out, len, "%sLeer CV", r); return;
-    case CMD_WRITE_CONFIG: snprintf(out, len, "%sEscribir CV", r); return;
-    case CMD_CONFIG_DATA_REQUEST: snprintf(out, len, "%sPeticion datos config", r); return;
-    case CMD_CONFIG_DATA_STREAM: snprintf(out, len, "%sFlujo datos config", r); return;
+    case CMD_READ_CONFIG: snprintf(out, len, "%sRead CV", r); return;
+    case CMD_WRITE_CONFIG: snprintf(out, len, "%sWrite CV", r); return;
+    case CMD_CONFIG_DATA_REQUEST: snprintf(out, len, "%sConfig data request", r); return;
+    case CMD_CONFIG_DATA_STREAM: snprintf(out, len, "%sConfig data stream", r); return;
     default: {
-      int n = snprintf(out, len, "%sComando 0x%02X dlc %u:", r, cmd, f.dlc);
+      int n = snprintf(out, len, "%sCommand 0x%02X dlc %u:", r, cmd, f.dlc);
       for (uint8_t i = 0; i < f.dlc && i < 8 && n > 0 && static_cast<size_t>(n) < len; i++)
         n += snprintf(out + n, len - n, " %02X", f.data[i]);
       return;

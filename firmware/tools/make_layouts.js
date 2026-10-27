@@ -67,9 +67,9 @@ function check(b, expectedOpen) {
 const layouts = {};
 
 // 1) Lanzadera: vía recta con toperas en los dos extremos y un sensor en
-//    cada estación (sensores 1 y 2, como el script "lanzadera").
+//    cada estación (sensores 1 y 2, como el script "shuttle").
 {
-  const b = builder("Lanzadera entre dos estaciones", { w: 2000, h: 400 });
+  const b = builder("Shuttle between two stations", { w: 2000, h: 400 });
   const tope1 = b.add("24977", 1700, 200, 0);
   b.from(tope1, 0);
   const sA = b.go("24188", 1);   // extremo derecho (estación B)
@@ -80,15 +80,15 @@ const layouts = {};
   check(b, 0);
   b.L.marklin = {
     turnouts: [],
-    sensors: [{ piece: sB.id, id: 1, name: "estacion_a" }, { piece: sA.id, id: 2, name: "estacion_b" }],
+    sensors: [{ piece: sB.id, id: 1, name: "station_a" }, { piece: sA.id, id: 2, name: "station_b" }],
   };
-  layouts.lanzadera = round(b.L);
+  layouts.shuttle = round(b.L);
 }
 
 // 2) Óvalo con estación de dos vías (desvíos 1 y 2, sensores 7 y 8, como el
-//    script "estacion_aleatoria").
+//    script "random_station").
 {
-  const b = builder("Óvalo con estación de dos vías", { w: 2600, h: 1300 });
+  const b = builder("Oval with a two-track station", { w: 2600, h: 1300 });
   const start = b.add("24188", 700, 1100, 0);
   const t1 = b.go("24611");                  // desvío 1: la vía 2 va hacia el interior
   b.go("24172");
@@ -108,16 +108,16 @@ const layouts = {};
   b.go("24224", 1);
   check(b, 0);
   b.L.marklin = {
-    turnouts: [{ piece: t1.id, name: "entrada", addr: "mm:1" }, { piece: t2.id, name: "salida", addr: "mm:2" }],
-    sensors: [{ piece: start.id, id: 7, name: "llegada" }, { piece: main[1].id, id: 8, name: "anden" },
-              { piece: sid[1].id, id: 9, name: "anden_via2" }],
+    turnouts: [{ piece: t1.id, name: "entry", addr: "mm:1" }, { piece: t2.id, name: "exit", addr: "mm:2" }],
+    sensors: [{ piece: start.id, id: 7, name: "arrival" }, { piece: main[1].id, id: 8, name: "platform" },
+              { piece: sid[1].id, id: 9, name: "platform_track2" }],
   };
-  layouts.estacion = round(b.L);
+  layouts.station = round(b.L);
 }
 
 // 3) El ejemplo del planificador: óvalo con apartadero y ramal elevado.
 {
-  const b = builder("Óvalo con ramal elevado", { w: 2400, h: 1300 });
+  const b = builder("Oval with a raised branch line", { w: 2400, h: 1300 });
   b.add("24188", 450, 1000, 0);
   const t1 = b.go("24612");
   b.go("24188"); b.go("24188");
@@ -136,10 +136,10 @@ const layouts = {};
   for (const p of top) p.z = p.z.map(() => 28);
   check(b, 0);
   b.L.marklin = {
-    turnouts: [{ piece: t1.id, name: "ramal", addr: "mm:3" }],
-    sensors: [{ piece: top[0].id, id: 10, name: "fin_ramal" }],
+    turnouts: [{ piece: t1.id, name: "branch", addr: "mm:3" }],
+    sensors: [{ piece: top[0].id, id: 10, name: "branch_end" }],
   };
-  layouts.ramal_elevado = round(b.L);
+  layouts.branch_line = round(b.L);
 }
 
 const out = path.join(__dirname, "..", "layouts");

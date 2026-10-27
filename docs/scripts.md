@@ -140,10 +140,10 @@ editarlos o borrarlos):
 
 | Script | Qué hace |
 |---|---|
-| `demo_tiempo` | Ida y vuelta solo con tiempos (sin sensores). Ideal para la primera prueba. |
-| `lanzadera` | Lanzadera entre dos estaciones con un sensor en cada extremo y paradas de duración aleatoria. |
-| `puente_tren1` + `puente_tren2` | Dos trenes en circuitos distintos que comparten un puente de vía única, coordinados con `lock`. |
-| `estacion_aleatoria` | Circuito con estación de dos vías; el tren elige vía al azar con un desvío. |
+| `demo_time` | Ida y vuelta solo con tiempos (sin sensores). Ideal para la primera prueba. |
+| `shuttle` | Lanzadera entre dos estaciones con un sensor en cada extremo y paradas de duración aleatoria. |
+| `bridge_train1` + `bridge_train2` | Dos trenes en circuitos distintos que comparten un puente de vía única, coordinados con `lock`. |
+| `random_station` | Circuito con estación de dos vías; el tren elige vía al azar con un desvío. |
 
 ### Patrón: tramo compartido entre dos trenes
 

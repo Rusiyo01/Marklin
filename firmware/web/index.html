@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -186,40 +186,41 @@ label.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1
 <body>
 <header>
   <h1>Märklin ESP32</h1>
-  <span id="power" class="badge">vía: ?</span>
+  <span id="power" class="badge">track: ?</span>
   <span id="ms2" class="badge">MS2: ?</span>
   <span class="sp"></span>
+  <select id="langSel" title="Language · Idioma · Sprache · Lingua · Langue"></select>
   <button class="go" onclick="post('/api/power',{on:1})">GO</button>
   <button class="stop" onclick="post('/api/power',{on:0})">STOP</button>
-  <button class="emerg" onclick="post('/api/emergency')" title="Corta la vía y detiene todos los scripts">EMERGENCIA</button>
+  <button class="emerg" onclick="post('/api/emergency')" title="Cuts track power and stops all scripts" data-i18n-title data-i18n>EMERGENCY</button>
 </header>
 <nav>
-  <button data-tab="desk" class="sel">Locomotoras</button>
-  <button data-tab="sw">Desvíos</button>
-  <button data-tab="inv">Inventario</button>
-  <button data-tab="maq">Maqueta</button>
-  <button data-tab="auto">Automático</button>
-  <button data-tab="sens">Sensores</button>
-  <button data-tab="mon">Monitor</button>
-  <button data-tab="cfg">Ajustes</button>
+  <button data-tab="desk" class="sel" data-i18n>Locomotives</button>
+  <button data-tab="sw" data-i18n>Turnouts</button>
+  <button data-tab="inv" data-i18n>Inventory</button>
+  <button data-tab="maq" data-i18n>Layout</button>
+  <button data-tab="auto" data-i18n>Automation</button>
+  <button data-tab="sens" data-i18n>Sensors</button>
+  <button data-tab="mon" data-i18n>Monitor</button>
+  <button data-tab="cfg" data-i18n>Settings</button>
 </nav>
 <main>
 
 <section id="desk" class="sel">
   <aside class="panel rosterbox">
-    <div class="row"><h2 style="margin:0">Mi inventario</h2><span class="sp"></span>
-      <button class="small" onclick="showTab('inv')">Gestionar</button></div>
+    <div class="row"><h2 style="margin:0" data-i18n>My inventory</h2><span class="sp"></span>
+      <button class="small" onclick="showTab('inv')" data-i18n>Manage</button></div>
     <div id="roster"></div>
-    <p class="dir small">Clic: al primer mando libre. También puedes arrastrarla a un mando.</p>
+    <p class="dir small" data-i18n>Click: to the first free throttle. You can also drag it onto a throttle.</p>
   </aside>
   <div class="deskmain">
     <div id="deskBar" class="panel row">
-      <span class="dir">Locomotoras a la vez:</span>
+      <span class="dir" data-i18n>Locos at once:</span>
       <span class="seg"><button data-n="1" onclick="setCabCount(1)">1</button><button data-n="2" onclick="setCabCount(2)">2</button><button data-n="3" onclick="setCabCount(3)">3</button><button data-n="4" onclick="setCabCount(4)">4</button><button data-n="5" onclick="setCabCount(5)">5</button><button data-n="6" onclick="setCabCount(6)">6</button><button data-n="7" onclick="setCabCount(7)">7</button><button data-n="8" onclick="setCabCount(8)">8</button></span>
       <span class="sp"></span>
-      <button class="small" onclick="post('/api/halt')" title="Velocidad 0 a todas las locos">Parar todas</button>
-      <details class="keys"><summary>Teclado</summary><div class="help">Tab: siguiente mando · ↑/↓: ±5 % · RePág/AvPág: ±20 %
-←/→: sentido · Espacio: parar loco · 0–9: funciones F0–F9 · Esc: STOP (corta la vía)</div></details>
+      <button class="small" onclick="post('/api/halt')" title="Speed 0 for all locos" data-i18n-title data-i18n>Stop all</button>
+      <details class="keys"><summary data-i18n>Keyboard</summary><div class="help" data-i18n="pre">Tab: next throttle · ↑/↓: ±5 % · PgUp/PgDn: ±20 %
+←/→: direction · Space: stop loco · 0–9: functions F0–F9 · Esc: STOP (cuts track power)</div></details>
     </div>
     <div id="cabs" class="cabs"></div>
   </div>
@@ -229,159 +230,155 @@ label.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1
   <div class="swmain">
     <div class="panel planbox">
       <div class="row"><h2 class="planTitle" style="margin:0"></h2><span class="sp"></span>
-        <span class="seg"><button class="small" onclick="zoomPlan(1/1.3)" title="Acercar">＋</button><button class="small" onclick="fitPlan()" title="Ajustar">⤢</button><button class="small" onclick="zoomPlan(1.3)" title="Alejar">－</button></span></div>
+        <span class="seg"><button class="small" onclick="zoomPlan(1/1.3)" title="Zoom in" data-i18n-title>＋</button><button class="small" onclick="fitPlan()" title="Fit" data-i18n-title>⤢</button><button class="small" onclick="zoomPlan(1.3)" title="Zoom out" data-i18n-title>－</button></span></div>
       <div id="deskTurnouts" class="chips"></div>
       <svg id="deskPlan" class="planview" xmlns="http://www.w3.org/2000/svg"></svg>
-      <p class="planEmpty dir">No hay maqueta activa. Elige o sube una en la pestaña <b>Maqueta</b>.</p>
-      <p class="dir small">Clic en un desvío del plano (o en su botón) para cambiarlo. Rueda: zoom · arrastrar: mover · doble clic: ajustar.</p>
+      <p class="planEmpty dir" data-i18n>No active layout. Choose or upload one in the <b>Layout</b> tab.</p>
+      <p class="dir small" data-i18n>Click a turnout on the plan (or its button) to switch it. Wheel: zoom · drag: move · double click: fit.</p>
     </div>
     <div class="panel">
-      <h2>Desvíos y señales por dirección</h2>
+      <h2 data-i18n>Turnouts and signals by address</h2>
       <div class="row">
-        <input id="accAddr" placeholder="5 o dcc:12" size="10">
-        <button onclick="acc(1)">Recto / verde</button>
-        <button onclick="acc(0)">Desviado / rojo</button>
-        <button onclick="acc(2)">Amarillo</button>
-        <button onclick="acc(3)">Blanco</button>
+        <input id="accAddr" placeholder="5 or dcc:12" data-i18n-ph size="10">
+        <button onclick="acc(1)" data-i18n>Straight / green</button>
+        <button onclick="acc(0)" data-i18n>Diverging / red</button>
+        <button onclick="acc(2)" data-i18n>Yellow</button>
+        <button onclick="acc(3)" data-i18n>White</button>
       </div>
       <table style="margin-top:10px"><tbody id="accs"></tbody></table>
     </div>
   </div>
   <aside class="panel swloco">
-    <h2>Locomotora mientras cambio desvíos</h2>
-    <select id="swPick" title="Locomotora a controlar"></select>
+    <h2 data-i18n>Loco while switching turnouts</h2>
+    <select id="swPick" title="Loco to control" data-i18n-title></select>
     <div id="swCab"></div>
-    <p class="dir small">Teclado: ↑/↓ velocidad · ←/→ sentido · Espacio parar · 0–9 funciones</p>
+    <p class="dir small" data-i18n>Keyboard: ↑/↓ speed · ←/→ direction · Space stop · 0–9 functions</p>
   </aside>
 </section>
 
 <section id="inv">
   <div class="panel row">
-    <button class="act" onclick="openLocoDialog()">+ Registrar locomotora</button>
-    <button id="ms2Btn" onclick="ms2Import()">Leer locos de la MS2</button>
-    <label title="Cuando la MS2 da de alta una loco mfx nueva (o mueves una que no está aquí), se copia sola con su nombre y sus funciones">
-      <input type="checkbox" id="autoImp" onchange="setAutoImport(this.checked)"> Copiar solas las locos nuevas de la MS2</label>
+    <button class="act" onclick="openLocoDialog()" data-i18n>+ Add loco</button>
+    <button id="ms2Btn" onclick="ms2Import()" data-i18n>Read locos from the MS2</button>
+    <label title="When the MS2 registers a new mfx loco (or you drive one that is not here), it is copied automatically with its name and functions" data-i18n-title>
+      <input type="checkbox" id="autoImp" onchange="setAutoImport(this.checked)"> <span data-i18n>Copy new MS2 locos automatically</span></label>
     <span class="sp"></span><span id="impMsg" class="dir"></span>
   </div>
   <div id="invGrid" class="invgrid"></div>
-  <div class="panel" id="detBox" hidden><h2>Detectadas en la vía y sin registrar</h2><div id="detList"></div></div>
-  <p class="dir small">Loco mfx nueva: ponla en la vía con la MS2 conectada; la MS2 la da de alta como siempre y,
-  unos segundos después, aparece aquí con su nombre y sus funciones (luces, sonidos...). Toca la foto o <b>Editar</b>
-  para añadir una foto o cambiar los símbolos de las funciones.</p>
+  <div class="panel" id="detBox" hidden><h2 data-i18n>Detected on the track, not registered</h2><div id="detList"></div></div>
+  <p class="dir small" data-i18n>New mfx loco: put it on the track with the MS2 connected; the MS2 registers it as usual and, a few seconds later, it appears here with its name and functions (lights, sounds...). Tap the photo or <b>Edit</b> to add a photo or change the function symbols.</p>
 </section>
 
 <div id="locoDlg" class="modal" hidden><div class="wbox wide">
-  <h2 id="dlgTitle">Registrar locomotora</h2>
+  <h2 id="dlgTitle" data-i18n>Add loco</h2>
   <div class="dlgtop">
     <div class="dlgphoto"><div id="dlgImg" class="invphoto"></div>
-      <div class="row"><label class="btnlike small">Elegir foto<input type="file" id="dlgPhotoFile" accept="image/*" hidden></label>
-      <button id="dlgPhotoDel" class="small">Quitar</button></div></div>
+      <div class="row"><label class="btnlike small"><span data-i18n>Choose photo</span><input type="file" id="dlgPhotoFile" accept="image/*" hidden></label>
+      <button id="dlgPhotoDel" class="small" data-i18n>Remove</button></div></div>
     <div class="formgrid">
-      <label>Nombre <input id="dlgLabel" placeholder="Cocodrilo SBB"></label>
-      <label>Protocolo <select id="dlgProto"><option value="mm2">MM2 (Motorola)</option><option value="dcc">DCC</option><option value="mfx">mfx (SID de la MS2)</option></select></label>
-      <label>Dirección <input id="dlgAddr" type="number" min="1"></label>
-      <label>Nombre en scripts <input id="dlgName"></label>
+      <label><span data-i18n>Name</span> <input id="dlgLabel" placeholder="Crocodile SBB" data-i18n-ph></label>
+      <label><span data-i18n>Protocol</span> <select id="dlgProto"><option value="mm2">MM2 (Motorola)</option><option value="dcc">DCC</option><option value="mfx" data-i18n>mfx (SID from the MS2)</option></select></label>
+      <label><span data-i18n>Address</span> <input id="dlgAddr" type="number" min="1"></label>
+      <label><span data-i18n>Name in scripts</span> <input id="dlgName"></label>
     </div>
   </div>
-  <h3 class="dlgh">Funciones</h3>
+  <h3 class="dlgh" data-i18n>Functions</h3>
   <div id="dlgFns" class="fnedit"></div>
-  <button id="dlgFnMore" class="small" onclick="renderFnEditor(readFnEditor(), true)">Mostrar F16–F31</button>
-  <p class="dir">Truco: las locos que ya tienes en la MS2 se copian con <b>Leer locos de la MS2</b>, con sus funciones.</p>
-  <div class="row wfoot"><button id="dlgDel" onclick="deleteLocoDialog()">Eliminar</button><span class="sp"></span>
-    <button onclick="closeLocoDialog()">Cancelar</button><button class="act" onclick="saveLocoDialog()">Guardar</button></div>
+  <button id="dlgFnMore" class="small" onclick="renderFnEditor(readFnEditor(), true)" data-i18n>Show F16–F31</button>
+  <p class="dir" data-i18n>Tip: the locos you already have in the MS2 are copied with their functions using <b>Read locos from the MS2</b>.</p>
+  <div class="row wfoot"><button id="dlgDel" onclick="deleteLocoDialog()" data-i18n>Delete</button><span class="sp"></span>
+    <button onclick="closeLocoDialog()" data-i18n>Cancel</button><button class="act" onclick="saveLocoDialog()" data-i18n>Save</button></div>
 </div></div>
 
 <section id="maq">
   <div class="panel row">
     <select id="layoutSel" style="max-width:260px"></select>
-    <label class="btnlike">Subir maqueta (C-Track Planner)<input type="file" id="layoutFile" accept=".json,.html,.htm" hidden></label>
+    <label class="btnlike"><span data-i18n>Upload layout (C-Track Planner)</span><input type="file" id="layoutFile" accept=".json,.html,.htm" hidden></label>
     <span class="sp"></span>
-    <button id="editBtn" onclick="toggleEdit()">Asignar desvíos y sensores</button>
-    <button onclick="delLayout()">Borrar</button>
+    <button id="editBtn" onclick="toggleEdit()" data-i18n>Assign turnouts and sensors</button>
+    <button onclick="delLayout()" data-i18n>Delete</button>
   </div>
   <div class="panel">
     <h2 class="planTitle"></h2>
     <svg id="plan" class="planview" xmlns="http://www.w3.org/2000/svg"></svg>
-    <p class="planEmpty dir">No hay maqueta seleccionada. Elige una de ejemplo arriba o sube la tuya:
-    en <b>C-Track Planner</b> pulsa <i>Guardar → Exportar archivo de maqueta (.json)</i> (o exporta la app sin conexión .html)
-    y súbela con el botón <i>Subir maqueta</i>.</p>
-    <p id="planHint" class="dir">Toca un desvío para cambiarlo. Los sensores activos se ven en verde.</p>
+    <p class="planEmpty dir" data-i18n>No layout selected. Choose an example above or upload your own: in <b>C-Track Planner</b> press <i>Save → Export layout file (.json)</i> (or export the offline .html app) and upload it with the <i>Upload layout</i> button.</p>
+    <p id="planHint" class="dir" data-i18n>Tap a turnout to switch it. Active sensors are shown in green.</p>
   </div>
   <div class="panel" id="editPanel" hidden></div>
   <div class="panel" id="mapBox" hidden>
-    <h2>Desvíos y sensores de esta maqueta</h2>
+    <h2 data-i18n>Turnouts and sensors of this layout</h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
       <table><tbody id="mapTurnouts"></tbody></table>
       <table><tbody id="mapSensors"></tbody></table>
     </div>
     <p id="mapHint" class="help" style="margin-top:8px"></p>
     <div class="row" style="margin-top:8px">
-      <button onclick="autoNumber()">Numerar desvíos automáticamente</button>
+      <button onclick="autoNumber()" data-i18n>Number turnouts automatically</button>
       <span class="sp"></span>
-      <button id="saveMap" onclick="saveMap()">Guardar asignaciones</button>
+      <button id="saveMap" onclick="saveMap()" data-i18n>Save assignments</button>
     </div>
   </div>
 </section>
 
 <section id="auto">
   <div class="panel">
-    <h2>Scripts en marcha</h2>
-    <table><thead><tr><th>Script</th><th>Estado</th><th>Línea</th><th>Actividad</th><th></th></tr></thead>
+    <h2 data-i18n>Running scripts</h2>
+    <table><thead><tr><th>Script</th><th data-i18n>State</th><th data-i18n>Line</th><th data-i18n>Activity</th><th></th></tr></thead>
     <tbody id="runners"></tbody></table>
-    <div class="row" style="margin-top:8px"><button onclick="post('/api/scriptstop',{all:1})">Detener todos</button></div>
+    <div class="row" style="margin-top:8px"><button onclick="post('/api/scriptstop',{all:1})" data-i18n>Stop all</button></div>
   </div>
   <div class="panel">
-    <h2>Scripts guardados</h2>
+    <h2 data-i18n>Saved scripts</h2>
     <table><tbody id="scripts"></tbody></table>
   </div>
   <div class="panel">
-    <h2>Editor</h2>
+    <h2 data-i18n>Editor</h2>
     <div class="row" style="margin-bottom:8px">
-      <input id="sname" placeholder="nombre_del_script" size="22">
-      <button onclick="saveScript()">Guardar</button>
-      <button onclick="checkScript()">Comprobar</button>
-      <button onclick="saveScript(true)">Guardar y ejecutar</button>
-      <button onclick="newScript()">Nuevo</button>
+      <input id="sname" placeholder="script_name" data-i18n-ph size="22">
+      <button onclick="saveScript()" data-i18n>Save</button>
+      <button onclick="checkScript()" data-i18n>Check</button>
+      <button onclick="saveScript(true)" data-i18n>Save and run</button>
+      <button onclick="newScript()" data-i18n>New</button>
       <span class="sp"></span>
-      <button onclick="delScript()">Borrar</button>
+      <button onclick="delScript()" data-i18n>Delete</button>
     </div>
-    <textarea id="src" rows="20" spellcheck="false" placeholder="# Escribe aquí tu script"></textarea>
+    <textarea id="src" rows="20" spellcheck="false" placeholder="# Write your script here" data-i18n-ph></textarea>
     <div id="smsg" class="msg"></div>
-    <details><summary>Chuleta del lenguaje</summary><pre class="help">
-loco tren mm2 24            alias de loco (mm2 / dcc / mfx + dirección)
-sensor anden 3              alias de sensor
-power on | off              corriente de vía
-speed tren 400 | 40%        velocidad 0-1000 o porcentaje
-ramp tren 60% 3s            acelera/frena gradualmente
-dir tren fwd | rev | toggle sentido (deja la loco parada)
-func tren 0 on | off        funciones F0-F31
-estop tren                  parada de emergencia de una loco
-halt                        para todas las locos
-switch 5 straight | round   desvío/señal (también dcc:5)
-wait 2s | 500ms | 1m        espera
-wait random 10s 30s         espera aleatoria
-wait sensor 3 on [timeout 60s [else etiqueta]]
-label nombre / goto nombre  saltos
-if sensor 3 on goto x       salto condicional
-if chance 30 goto x         salto al azar (30 %)
-if locked puente goto x     si otro script tiene el bloqueo
-repeat 5 ... end            bucle (repeat sin número = siempre)
-lock puente / unlock puente reservar un tramo entre scripts
-log texto                   mensaje al registro
-exit                        terminar
+    <details><summary data-i18n>Language cheat sheet</summary><pre class="help" data-i18n="pre">
+loco train mm2 24           loco alias (mm2 / dcc / mfx + address)
+sensor platform 3           sensor alias
+power on | off              track power
+speed train 400 | 40%       speed 0-1000 or percentage
+ramp train 60% 3s           accelerate/brake gradually
+dir train fwd | rev | toggle direction (leaves the loco stopped)
+func train 0 on | off       functions F0-F31
+estop train                 emergency stop of one loco
+halt                        stop all locos
+switch 5 straight | round   turnout/signal (also dcc:5)
+wait 2s | 500ms | 1m        wait
+wait random 10s 30s         random wait
+wait sensor 3 on [timeout 60s [else label]]
+label name / goto name      jumps
+if sensor 3 on goto x       conditional jump
+if chance 30 goto x         random jump (30 %)
+if locked bridge goto x     if another script holds the lock
+repeat 5 ... end            loop (repeat without a number = forever)
+lock bridge / unlock bridge reserve a section between scripts
+log text                    message to the log
+exit                        finish
 </pre></details>
   </div>
-  <div class="panel"><h2>Mensajes de los scripts</h2><div id="slog" class="help"></div></div>
+  <div class="panel"><h2 data-i18n>Script messages</h2><div id="slog" class="help"></div></div>
 </section>
 
 <section id="sens">
   <div class="panel">
-    <h2>Sensores <span class="dir">(clic = simular cambio)</span></h2>
+    <h2><span data-i18n>Sensors</span> <span class="dir" data-i18n>(click = simulate a change)</span></h2>
     <div id="sensors" class="sensors"></div>
     <div class="row" style="margin-top:10px">
-      <input id="simId" type="number" min="1" placeholder="nº sensor" style="width:110px">
-      <button onclick="simSensor(1)">Simular ON</button>
-      <button onclick="simSensor(0)">Simular OFF</button>
+      <input id="simId" type="number" min="1" placeholder="sensor no." data-i18n-ph style="width:110px">
+      <button onclick="simSensor(1)" data-i18n>Simulate ON</button>
+      <button onclick="simSensor(0)" data-i18n>Simulate OFF</button>
     </div>
   </div>
 </section>
@@ -389,16 +386,16 @@ exit                        terminar
 <section id="mon">
   <div class="panel row">
     <input id="cmd" placeholder="speed mm2:24 30%   |   func dcc:3 0 on   |   switch 5 round" style="flex:1;min-width:200px">
-    <button onclick="sendCmd()">Enviar</button>
+    <button onclick="sendCmd()" data-i18n>Send</button>
   </div>
   <div class="panel">
     <div class="row" style="margin-bottom:8px">
-      <label><input type="checkbox" id="fRx" checked> CAN recibido</label>
-      <label><input type="checkbox" id="fTx" checked> CAN enviado</label>
-      <label><input type="checkbox" id="fInfo" checked> Info/scripts</label>
-      <label><input type="checkbox" id="fPause"> Pausa</label>
+      <label><input type="checkbox" id="fRx" checked> <span data-i18n>CAN received</span></label>
+      <label><input type="checkbox" id="fTx" checked> <span data-i18n>CAN sent</span></label>
+      <label><input type="checkbox" id="fInfo" checked> <span data-i18n>Info/scripts</span></label>
+      <label><input type="checkbox" id="fPause"> <span data-i18n>Pause</span></label>
       <span class="sp"></span>
-      <button class="small" onclick="logLines=[];renderLog()">Limpiar</button>
+      <button class="small" onclick="logLines=[];renderLog()" data-i18n>Clear</button>
     </div>
     <div id="log"></div>
   </div>
@@ -406,28 +403,28 @@ exit                        terminar
 
 <section id="cfg">
   <div class="panel">
-    <h2>Estado</h2>
+    <h2 data-i18n>Status</h2>
     <div id="info" class="kv"></div>
   </div>
   <div class="panel">
     <h2>iPad · RailControl Pro (Central Station)</h2>
     <div id="lan" class="kv"></div>
-    <p style="margin:10px 0 0;line-height:1.5;color:var(--dim)">El ESP32 se presenta en la red como una Central Station. En el iPad: conéctate a la WiFi <b class="apName"></b> (o a la de casa, si el ESP32 está en ella), abre RailControl Pro, elige <b>Central Station</b> y escribe la IP <b class="lanIp"></b>. La app recibe las locos registradas y los desvíos de la maqueta activa.</p>
+    <p id="lanHelp" style="margin:10px 0 0;line-height:1.5;color:var(--dim)"></p>
   </div>
   <div class="panel">
-    <h2>Equipos en el bus CAN</h2>
+    <h2 data-i18n>Devices on the CAN bus</h2>
     <table><tbody id="devices"></tbody></table>
-    <div class="row" style="margin-top:8px"><button onclick="post('/api/ping')">Buscar equipos (ping)</button></div>
+    <div class="row" style="margin-top:8px"><button onclick="post('/api/ping')" data-i18n>Find devices (ping)</button></div>
   </div>
   <div class="panel">
-    <h2>Configuración (JSON)</h2>
+    <h2 data-i18n>Configuration (JSON)</h2>
     <textarea id="cfgText" rows="22" spellcheck="false"></textarea>
     <div class="row" style="margin-top:8px">
-      <button onclick="openWizard()">Asistente de configuración</button>
-      <button onclick="loadCfg()">Recargar</button>
-      <button class="act" onclick="saveCfg()">Guardar y reiniciar</button>
+      <button onclick="openWizard()" data-i18n>Setup wizard</button>
+      <button onclick="loadCfg()" data-i18n>Reload</button>
+      <button class="act" onclick="saveCfg()" data-i18n>Save and restart</button>
       <span class="sp"></span>
-      <button onclick="post('/api/restart')">Reiniciar ESP32</button>
+      <button onclick="post('/api/restart')" data-i18n>Restart ESP32</button>
     </div>
     <div id="cmsg" class="msg"></div>
   </div>
@@ -437,10 +434,15 @@ exit                        terminar
 <div id="wizard" hidden><div class="wbox">
   <div id="wzSteps"></div>
   <div id="wzBody"></div>
-  <div class="row wfoot"><button id="wzLater" onclick="closeWizard(true)">Más tarde</button><span class="sp"></span>
-    <button id="wzBack" onclick="wzBack()">Atrás</button><button id="wzNext" class="act" onclick="wzNext()">Siguiente</button></div>
+  <div class="row wfoot"><button id="wzLater" onclick="closeWizard(true)" data-i18n>Later</button><span class="sp"></span>
+    <button id="wzBack" onclick="wzBack()" data-i18n>Back</button><button id="wzNext" class="act" onclick="wzNext()" data-i18n>Next</button></div>
 </div></div>
 
+<script src="i18n.js"></script>
+<script src="i18n_es.js"></script>
+<script src="i18n_de.js"></script>
+<script src="i18n_it.js"></script>
+<script src="i18n_fr.js"></script>
 <script src="ctrack.js"></script>
 <script src="app.js"></script>
 <script src="layout.js"></script>

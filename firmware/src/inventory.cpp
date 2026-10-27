@@ -93,10 +93,9 @@ void merge() {
     saveConfig(config);
     touch();
   }
-  status = "MS2: " + String(importer.locos().size()) + " locos leidas";
-  if (added) status += ", " + String(added) + " nuevas (" + names + ")";
-  if (updated) status += ", " + String(updated) + " actualizadas";
-  if (!added && !updated) status += ", sin cambios";
+  status = "MS2: " + String(importer.locos().size()) + " locos read, " + String(added) + " new, " +
+           String(updated) + " updated";
+  if (added) status += ": " + names;
   if (added || updated || !importAuto) eventLog.add(LogKind::Info, status.c_str());
 }
 
@@ -105,8 +104,8 @@ void begin(bool automatic) {
   importer.start(controller.hash(), !d || d->versionHigh >= 3, millis());
   importRunning = true;
   importAuto = automatic;
-  status = "Leyendo la lista de locos de la MS2...";
-  if (!automatic) eventLog.add(LogKind::Info, "MS2: leyendo sus locomotoras");
+  status = "Reading the loco list from the MS2...";
+  if (!automatic) eventLog.add(LogKind::Info, "MS2: reading its locos");
 }
 
 }  // namespace
@@ -120,7 +119,7 @@ void loop(uint32_t now) {
   importer.tick(now);
   if (importRunning) {
     if (importer.state() == cs2::Ms2Importer::State::Info && importer.current() < importer.names().size())
-      status = "Leyendo '" + String(importer.names()[importer.current()].c_str()) + "' (" +
+      status = "Reading '" + String(importer.names()[importer.current()].c_str()) + "' (" +
                String(importer.current() + 1) + "/" + String(importer.names().size()) + ")...";
     if (!importer.busy()) {
       importRunning = false;
@@ -156,7 +155,7 @@ void onBusFrame(const marklin::CanFrame& f, bool tx) {
     // nombre y funciones durante unos segundos. Leemos después (y otra vez
     // más tarde, por si tarda).
     if (!autoAtMs && !importRunning)
-      eventLog.add(LogKind::Info, "MS2: loco mfx nueva en la via; se copiara al inventario");
+      eventLog.add(LogKind::Info, "MS2: new mfx loco on the track; it will be copied to the inventory");
     scheduleAuto(20000);
     followUp = true;
     tried.clear();
@@ -174,11 +173,11 @@ void onBusFrame(const marklin::CanFrame& f, bool tx) {
 
 bool startImport(String* error) {
   if (importRunning) {
-    *error = "ya se estan leyendo las locos";
+    *error = "the locos are already being read";
     return false;
   }
   if (!ms2()) {
-    *error = "no hay ninguna MS2 en el bus (pulsa 'Buscar equipos' en Ajustes)";
+    *error = "there is no MS2 on the bus (press 'Find devices' in Settings)";
     return false;
   }
   begin(false);

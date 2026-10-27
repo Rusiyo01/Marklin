@@ -75,7 +75,7 @@ void installDefaults() {
     m.print("1");
     m.close();
   }
-  eventLog.addf(LogKind::Info, "instalados %d scripts de ejemplo", kDefaultScriptCount);
+  eventLog.addf(LogKind::Info, "installed %d example scripts", kDefaultScriptCount);
 }
 
 }  // namespace scripts
