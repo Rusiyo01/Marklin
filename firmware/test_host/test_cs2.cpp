@@ -116,6 +116,24 @@ TEST(cs2_ping_responde_como_central) {
   CHECK(readBe16(r.data + 6) == 0xFFFF);
 }
 
+TEST(cs2_app_que_se_anuncia_recibe_el_ping_de_la_central) {
+  // RailControl Pro y otras apps se anuncian con una respuesta de ping
+  // (tipo 0xEEEE, "CS2 software") en vez de preguntar.
+  cs2::Gateway gw(0x43533201);
+  std::vector<CanFrame> replies;
+  CanFrame hello;
+  hello.id = makeId(CMD_PING, true, 0x4711);
+  hello.dlc = 8;
+  writeBe32(hello.data, 0x4F5910DF);
+  hello.data[4] = 1;
+  hello.data[5] = 4;
+  writeBe16(hello.data + 6, 0xEEEE);
+  CHECK(gw.handleClientFrame(hello, nullptr, &replies));
+  CHECK(replies.size() == 1);
+  CHECK(commandOf(replies[0]) == CMD_PING && isResponse(replies[0]));
+  CHECK(readBe16(replies[0].data + 6) == 0xFFFF);
+}
+
 TEST(cs2_ordenes_de_la_app_van_al_bus) {
   cs2::Gateway gw;
   std::vector<CanFrame> replies;
