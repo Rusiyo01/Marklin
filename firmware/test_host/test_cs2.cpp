@@ -185,7 +185,7 @@ TEST(cs2_desvios_y_plano) {
   CHECK(!cs2::configFile("gbs-1", m, &f));
   CHECK(cs2::configFile("fs", m, &f) && f == "[fahrstrassen]\nversion\n .minor=4\n");
   CHECK(cs2::configFile("lokstat", m, &f));
-  CHECK(!cs2::configFile("prefs", m, &f));
+  CHECK(!cs2::configFile("xyz", m, &f));
 }
 
 TEST(cs2_fichero_desconocido_va_al_bus) {
@@ -209,4 +209,15 @@ TEST(cs2_evento_s88) {
   const CanFrame f = cs2::s88Event(0x4711, 2005, true);
   CHECK(commandOf(f) == CMD_S88_EVENT && isResponse(f));
   CHECK(readBe16(f.data) == 2 && readBe16(f.data + 2) == 5 && f.data[4] == 0 && f.data[5] == 1);
+}
+
+TEST(cs2_prefs_con_ip_y_uid) {
+  cs2::Model m;
+  m.ip = "192.168.4.1";
+  m.uid = 0x43533248;
+  std::string f;
+  CHECK(cs2::configFile("prefs", m, &f));
+  CHECK(f.compare(0, 14, "[Preferences]\n") == 0);
+  CHECK(f.find(" ..key=IpAdresse\n ..value=192.168.4.1\n") != std::string::npos);
+  CHECK(f.find(" ..key=GfpUid\n ..value=1129525832\n") != std::string::npos);
 }

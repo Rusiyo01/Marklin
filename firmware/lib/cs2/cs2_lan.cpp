@@ -253,6 +253,36 @@ std::string geraetVrs(uint32_t uid) {
   return s;
 }
 
+std::string prefsCs2(const Model& model) {
+  std::string s;
+  auto entry = [&](const char* key, const std::string& value) {
+    line(&s, " .entry");
+    s += " ..key=";
+    s += key;
+    s += "\n ..value=";
+    s += value;
+    s += '\n';
+  };
+  line(&s, "[Preferences]");
+  line(&s, "version");
+  line(&s, " .major=0");
+  line(&s, " .minor=1");
+  line(&s, "page");
+  entry("Vergabe", "automatisch");
+  entry("IpAdresse", model.ip);
+  entry("NetzMaske", "255.255.255.0");
+  line(&s, "page");
+  entry("Version", "4.2.13");
+  line(&s, "page");
+  entry("Sprache", "de");
+  line(&s, "page");
+  entry("SerNum", std::to_string(model.uid & 0xFFFF));
+  entry("GfpUid", std::to_string(model.uid));
+  entry("GuiUid", std::to_string(model.uid + 1));
+  entry("HardVers", "3.1");
+  return s;
+}
+
 namespace {
 
 std::string stateFile(const char* section, const char* version) {
@@ -276,6 +306,8 @@ bool configFile(const std::string& request, const Model& model, std::string* con
     // Una sola página (la 0).
     if (request != "gbs-0") return false;
     *content = gleisbildPageCs2(model);
+  } else if (request == "prefs") {
+    *content = prefsCs2(model);
   } else if (request == "geraet") {
     *content = geraetVrs(model.uid);
   } else if (request == "fs") {

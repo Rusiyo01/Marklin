@@ -697,11 +697,18 @@ bool serveCs2Config(const String& uri) {
   else if (file == "gleisbild.cs2") request = "gbs";
   else if (file == "fahrstrassen.cs2") request = "fs";
   else if (file == "geraet.vrs") request = "geraet";
+  else if (file == "prefs.cs2") request = "prefs";
+  else if (file == "lokomotive.sr2") request = "lokstat";
+  else if (file == "magnetartikel.sr2") request = "magstat";
+  else if (file == "gleisbild.sr2") request = "gbsstat";
+  else if (file == "fahrstrassen.sr2") request = "fsstat";
   else if (file.startsWith("gleisbilder/") && file.endsWith(".cs2")) request = "gbs-0";
   else return false;
   std::string content;
   if (!cs2server::configFile(request, &content)) return false;
   server.send(200, "text/plain; charset=utf-8", content.c_str());
+  eventLog.addf(LogKind::Info, "HTTP: %s (%u bytes) to %s", uri.c_str(), static_cast<unsigned>(content.size()),
+                server.client().remoteIP().toString().c_str());
   return true;
 }
 

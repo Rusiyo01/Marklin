@@ -75,6 +75,7 @@ struct Model {
   std::vector<ContactEntry> contacts;
   std::string pageName = "Layout";
   uint32_t uid = 0x43533201;  // UID de la central (número de serie en geraet.vrs)
+  std::string ip;              // IP por la que se llega a la central (prefs.cs2)
 };
 
 std::string lokomotiveCs2(const std::vector<LocoEntry>& locos);
@@ -86,6 +87,8 @@ std::string gleisbildPageCs2(const Model& model);
 // Descripción del equipo (/config/geraet.vrs); las apps la piden por HTTP
 // para comprobar que hay una CS2 en esa IP. Mismo formato que can2lan.
 std::string geraetVrs(uint32_t uid);
+// Preferencias de la CS2 (/config/prefs.cs2): IP, versión y UID.
+std::string prefsCs2(const Model& model);
 
 // Contenido del fichero que corresponde a una petición ("loks", "mags",
 // "gbs", "gbs-0", "fs", "lokstat", "geraet"...). false si no es uno de ellos.

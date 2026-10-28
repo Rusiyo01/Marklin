@@ -93,7 +93,8 @@ apps hay conectadas y cuántas órdenes han mandado. En **Monitor** verás las
   con zlib en tramas de 8 bytes.
 - Los mismos ficheros se pueden descargar por HTTP, como en la CS2:
   `http://192.168.4.1/config/lokomotive.cs2`, `magnetartikel.cs2`,
-  `gleisbild.cs2` y `gleisbilder/<página>.cs2`.
+  `gleisbild.cs2`, `gleisbilder/<página>.cs2`, `geraet.vrs`, `prefs.cs2` y
+  los `.sr2` de estado. El Monitor registra cada fichero que descarga la app.
 - Código: [`firmware/lib/cs2/cs2_lan.cpp`](../firmware/lib/cs2/cs2_lan.cpp)
   (protocolo y ficheros, con tests en el PC) y
   [`firmware/src/cs2_server.cpp`](../firmware/src/cs2_server.cpp) (sockets).

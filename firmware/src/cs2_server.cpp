@@ -91,6 +91,7 @@ void fillModel(cs2::Model* m) {
   }
   if (!layouts::activeTitle().empty()) m->pageName = layouts::activeTitle();
   m->uid = gateway.uid();
+  m->ip = (WiFi.status() == WL_CONNECTED ? WiFi.localIP() : WiFi.softAPIP()).toString().c_str();
 }
 
 // ---- Envío ---------------------------------------------------------------------
