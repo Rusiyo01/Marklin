@@ -242,6 +242,17 @@ std::string gleisbildPageCs2(const Model& model) {
   return s;
 }
 
+std::string geraetVrs(uint32_t uid) {
+  std::string s;
+  line(&s, "[geraet]");
+  line(&s, "version");
+  line(&s, " .minor=1");
+  line(&s, "geraet");
+  linef(&s, " .sernum=%lu", uid & 0xFFFF);
+  line(&s, " .hardvers=ESP32,3");
+  return s;
+}
+
 namespace {
 
 std::string stateFile(const char* section, const char* version) {
@@ -265,6 +276,8 @@ bool configFile(const std::string& request, const Model& model, std::string* con
     // Una sola página (la 0).
     if (request != "gbs-0") return false;
     *content = gleisbildPageCs2(model);
+  } else if (request == "geraet") {
+    *content = geraetVrs(model.uid);
   } else if (request == "fs") {
     *content = stateFile("[fahrstrassen]", " .minor=4");
   } else if (request == "lokstat") {

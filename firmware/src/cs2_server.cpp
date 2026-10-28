@@ -90,6 +90,7 @@ void fillModel(cs2::Model* m) {
     if (!dup) m->contacts.push_back({s.id, s.name});
   }
   if (!layouts::activeTitle().empty()) m->pageName = layouts::activeTitle();
+  m->uid = gateway.uid();
 }
 
 // ---- Envío ---------------------------------------------------------------------

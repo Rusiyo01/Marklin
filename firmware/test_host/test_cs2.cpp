@@ -134,6 +134,14 @@ TEST(cs2_app_que_se_anuncia_recibe_el_ping_de_la_central) {
   CHECK(readBe16(replies[0].data + 6) == 0xFFFF);
 }
 
+TEST(cs2_geraet_vrs) {
+  cs2::Model m;
+  m.uid = 0x4D123456;
+  std::string s;
+  CHECK(cs2::configFile("geraet", m, &s));
+  CHECK(s == "[geraet]\nversion\n .minor=1\ngeraet\n .sernum=13398\n .hardvers=ESP32,3\n");
+}
+
 TEST(cs2_ordenes_de_la_app_van_al_bus) {
   cs2::Gateway gw;
   std::vector<CanFrame> replies;

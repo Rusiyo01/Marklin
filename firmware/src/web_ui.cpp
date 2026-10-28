@@ -687,6 +687,7 @@ void handlePhotoDelete() {
 
 // Ficheros de configuración de la central, como en la CS2:
 // /config/lokomotive.cs2, magnetartikel.cs2, gleisbild.cs2, gleisbilder/<página>.cs2
+// y geraet.vrs (las apps lo piden para saber si hay una CS2 en esa IP).
 bool serveCs2Config(const String& uri) {
   if (!uri.startsWith("/config/")) return false;
   const String file = uri.substring(8);
@@ -695,6 +696,7 @@ bool serveCs2Config(const String& uri) {
   else if (file == "magnetartikel.cs2") request = "mags";
   else if (file == "gleisbild.cs2") request = "gbs";
   else if (file == "fahrstrassen.cs2") request = "fs";
+  else if (file == "geraet.vrs") request = "geraet";
   else if (file.startsWith("gleisbilder/") && file.endsWith(".cs2")) request = "gbs-0";
   else return false;
   std::string content;
