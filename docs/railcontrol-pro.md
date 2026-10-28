@@ -31,8 +31,11 @@ hace que el ESP32 sepa hablar con ella.
      protocolo MM2, DCC o mfx y el símbolo de cada función: luces, sonido,
      bocina...);
    - **los desvíos de la maqueta activa** (con su nombre y dirección);
-   - un **plano de vías** sencillo: un panel con todos los desvíos y
-     sensores para accionarlos con un toque.
+   - el **plano de vías de la maqueta activa**, dibujado en la rejilla de la
+     CS2 a partir de las piezas de C-Track (rectas, curvas, desvíos con su
+     dirección, topes y contactos S88). Lo calcula la web al abrir o guardar
+     la maqueta en la pestaña **Maqueta**; si no hay maqueta activa, la app
+     recibe un panel con los desvíos y sensores.
 
 En la web del ESP32, **Ajustes → iPad · RailControl Pro** muestra cuántas
 apps hay conectadas y cuántas órdenes han mandado. En **Monitor** verás las
@@ -48,7 +51,7 @@ apps hay conectadas y cuántas órdenes han mandado. En **Monitor** verás las
 | Lista de locos y desvíos | Sí: las locos registradas en el ESP32 y los desvíos de la maqueta activa. |
 | Sensores | Los de la Gleisbox/Link S88 por CAN y los sensores en GPIO del ESP32 (se envían a la app como eventos S88). |
 | Varios mandos a la vez | Sí: el iPad, la web del portátil/móvil, los scripts y la MS2 pueden usarse a la vez; todos ven los cambios de los demás. Hasta 4 apps conectadas a la vez. |
-| Plano de vías dibujado con la forma real | No: la app recibe un panel con los desvíos. El plano completo está en la web del portátil. |
+| Plano de vías | Sí: la maqueta activa, simplificada a la rejilla de la CS2 (las diagonales se dibujan en escalera). Los desvíos solo se pueden accionar desde el plano si tienen dirección asignada. |
 | Itinerarios (*Fahrstraßen*) de la central | No: se envía la lista vacía. Usa los scripts del ESP32 o los de la propia app. |
 | Funciones exclusivas de la CS3 por su web | No: el ESP32 se identifica como **CS2** (versión 4.2), que RailControl Pro maneja por completo por CAN. |
 

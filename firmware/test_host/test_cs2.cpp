@@ -181,9 +181,11 @@ TEST(cs2_desvios_y_plano) {
   CHECK(contains(f, "seite\n .name=Layout\n"));
   CHECK(cs2::configFile("gbs-0", m, &f));
   CHECK(contains(f, "element\n .id=0x101\n .typ=linksweiche\n .artikel=1\n .text=entrada\n"));
-  CHECK(contains(f, " .id=0x105\n .typ=rechtsweiche\n .artikel=2\n"));
-  CHECK(contains(f, " .id=0x301\n .typ=s88kontakt\n .artikel=3\n .text=anden\n"));
+  CHECK(contains(f, " .id=0x501\n .typ=rechtsweiche\n .artikel=2\n"));
+  CHECK(contains(f, " .id=0x103\n .typ=s88kontakt\n .artikel=3\n .text=anden\n"));
   CHECK(!cs2::configFile("gbs-1", m, &f));
+  m.trackPlan = "[gleisbildseite]\nversion\n .major=1\nelement\n .id=0x101\n .typ=gerade\n";
+  CHECK(cs2::configFile("gbs-0", m, &f) && f == m.trackPlan);
   CHECK(cs2::configFile("fs", m, &f) && f == "[fahrstrassen]\nversion\n .minor=4\n");
   CHECK(cs2::configFile("lokstat", m, &f));
   CHECK(!cs2::configFile("xyz", m, &f));

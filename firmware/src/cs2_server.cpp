@@ -91,6 +91,7 @@ void fillModel(cs2::Model* m) {
     if (!dup) m->contacts.push_back({s.id, s.name});
   }
   if (!layouts::activeTitle().empty()) m->pageName = layouts::activeTitle();
+  if (!config.layout.empty()) layouts::readTrackPlan(config.layout.c_str(), &m->trackPlan);
   m->uid = gateway.uid();
   m->ip = (WiFi.status() == WL_CONNECTED ? WiFi.localIP() : WiFi.softAPIP()).toString().c_str();
 }

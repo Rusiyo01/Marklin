@@ -15,6 +15,14 @@ const accRef = (a) => {
 const pieceById = (id) => PLAN.L && PLAN.L.pieces.find((p) => p.id === id);
 const turnoutOf = (id) => PLAN.L && PLAN.L.marklin.turnouts.find((t) => t.piece === id);
 const sensorOf = (id) => PLAN.L && PLAN.L.marklin.sensors.find((s) => s.piece === id);
+// Plano CS2 para RailControl Pro y otras apps (ver cs2gbs.js).
+async function uploadTrackPlan(name, L) {
+  try {
+    await api("/api/layout/gbs?name=" + encodeURIComponent(name), { method: "POST", body: CS2GBS.convert(L).text });
+    const e = PLAN.list.find((l) => l.name === name);
+    if (e) e.gbs = true;
+  } catch (e) {}
+}
 const pathD = (pts) => "M" + pts.map((q) => q[0].toFixed(1) + " " + q[1].toFixed(1)).join("L");
 
 async function loadLayouts(show) {
@@ -46,6 +54,7 @@ async function openLayout(name, quiet) {
     try {
       PLAN.L = await api("/api/layout?name=" + encodeURIComponent(name));
       PLAN.L.marklin = Object.assign({ turnouts: [], sensors: [] }, PLAN.L.marklin || {});
+      if (!(PLAN.list.find((l) => l.name === name) || {}).gbs) uploadTrackPlan(name, PLAN.L);
     } catch (e) {
       toast(tr(e.message), true);
     }
@@ -388,6 +397,7 @@ async function saveMap() {
   if (!PLAN.L) return;
   try {
     await post("/api/layout", { name: PLAN.name }, JSON.stringify(PLAN.L));
+    uploadTrackPlan(PLAN.name, PLAN.L);
     PLAN.dirty = false;
     renderMap();
   } catch (e) {}

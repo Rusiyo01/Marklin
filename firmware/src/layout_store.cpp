@@ -20,6 +20,7 @@ static std::vector<LayoutTurnout> activeTurnouts;
 static std::string activeName;
 
 static String pathFor(const String& name) { return String(kDir) + "/" + name + ".json"; }
+static String planFor(const String& name) { return String(kDir) + "/" + name + ".gbs"; }
 
 bool validName(const String& name) {
   if (name.length() == 0 || name.length() > 31) return false;
@@ -79,6 +80,7 @@ bool write(const String& name, const String& json, String* error) {
     return false;
   }
   if (!LittleFS.exists(kDir)) LittleFS.mkdir(kDir);
+  LittleFS.remove(planFor(name));
   File f = LittleFS.open(pathFor(name), "w");
   if (!f) {
     *error = "could not save";
@@ -94,7 +96,34 @@ bool write(const String& name, const String& json, String* error) {
   return true;
 }
 
-bool remove(const String& name) { return validName(name) && LittleFS.remove(pathFor(name)); }
+bool remove(const String& name) {
+  if (!validName(name)) return false;
+  LittleFS.remove(planFor(name));
+  return LittleFS.remove(pathFor(name));
+}
+
+bool writeTrackPlan(const String& name, const String& text) {
+  if (!exists(name) || text.length() > kMaxTrackPlanSize || !text.startsWith("[gleisbildseite]")) return false;
+  File f = LittleFS.open(planFor(name), "w");
+  if (!f) return false;
+  const bool ok = f.print(text) == text.length();
+  f.close();
+  if (!ok) LittleFS.remove(planFor(name));
+  return ok;
+}
+
+bool readTrackPlan(const String& name, std::string* out) {
+  if (!validName(name)) return false;
+  File f = LittleFS.open(planFor(name), "r");
+  if (!f) return false;
+  out->resize(f.size());
+  const size_t n = f.read(reinterpret_cast<uint8_t*>(&(*out)[0]), out->size());
+  f.close();
+  out->resize(n);
+  return n > 0;
+}
+
+bool hasTrackPlan(const String& name) { return validName(name) && LittleFS.exists(planFor(name)); }
 
 String title(const String& name) {
   File f = LittleFS.open(pathFor(name), "r");

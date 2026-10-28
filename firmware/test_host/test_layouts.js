@@ -74,4 +74,19 @@ test("importar .json y app .html de C-Track Planner", () => {
   assert.throws(() => CT.parseLayoutFile("<html>sin maqueta</html>"));
 });
 
+test("plano CS2 de la estacion de ejemplo", () => {
+  const G = require("../web/cs2gbs.js");
+  const L = JSON.parse(fs.readFileSync(path.join(__dirname, "../layouts/station.json")));
+  const r = G.convert(L);
+  const typ = (t) => r.elements.filter((e) => e.typ === t);
+  assert(r.text.startsWith("[gleisbildseite]\n"));
+  assert.strictEqual(typ("linksweiche").length + typ("rechtsweiche").length, 2);
+  for (const e of typ("linksweiche").concat(typ("rechtsweiche"))) assert(e.artikel > 0);
+  assert(typ("s88kontakt").length >= 2);
+  assert(typ("bogen").length >= 8);
+  // Cada vía une con su vecina: ningún tope en un óvalo cerrado.
+  assert.strictEqual(typ("prellbock").length, 0);
+  assert(r.text.length < 32 * 1024);
+});
+
 console.log(`\n${n} tests de maquetas OK`);

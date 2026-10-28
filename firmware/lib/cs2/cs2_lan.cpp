@@ -213,11 +213,12 @@ std::string gleisbildCs2(const std::string& pageName) {
 }
 
 std::string gleisbildPageCs2(const Model& model) {
+  if (!model.trackPlan.empty()) return model.trackPlan;
   std::string s;
   line(&s, "[gleisbildseite]");
   line(&s, "version");
   line(&s, " .major=1");
-  // Rejilla: id = fila << 8 | columna. Cuatro desvíos por fila, separados
+  // Rejilla: id = columna << 8 | fila. Cuatro desvíos por fila, separados
   // para que se lean los nombres.
   int row = 1;
   for (size_t i = 0; i < model.articles.size(); i++) {
@@ -225,7 +226,7 @@ std::string gleisbildPageCs2(const Model& model) {
     const int x = 1 + static_cast<int>(i % 4) * 4;
     row = 1 + static_cast<int>(i / 4) * 2;
     line(&s, "element");
-    linef(&s, " .id=0x%lx", static_cast<unsigned long>((row << 8) | x));
+    linef(&s, " .id=0x%lx", static_cast<unsigned long>((x << 8) | row));
     keyText(&s, " .typ=", a.typ);
     linef(&s, " .artikel=%lu", a.id);
     keyText(&s, " .text=", a.name);
@@ -236,7 +237,7 @@ std::string gleisbildPageCs2(const Model& model) {
     const int x = 1 + static_cast<int>(i % 6) * 3;
     const int y = first + static_cast<int>(i / 6) * 2;
     line(&s, "element");
-    linef(&s, " .id=0x%lx", static_cast<unsigned long>((y << 8) | x));
+    linef(&s, " .id=0x%lx", static_cast<unsigned long>((x << 8) | y));
     line(&s, " .typ=s88kontakt");
     linef(&s, " .artikel=%lu", c.id);
     keyText(&s, " .text=", c.name.empty() ? std::to_string(c.id) : c.name);

@@ -43,6 +43,12 @@ bool read(const String& name, String* out);
 // Valida que sea una maqueta (JSON con "pieces") y la guarda.
 bool write(const String& name, const String& json, String* error);
 bool remove(const String& name);
+// Plano de vías CS2 de la maqueta (/layouts/<nombre>.gbs), que calcula la web
+// a partir de las piezas. Se borra al guardar de nuevo la maqueta.
+constexpr size_t kMaxTrackPlanSize = 32 * 1024;
+bool writeTrackPlan(const String& name, const String& text);
+bool readTrackPlan(const String& name, std::string* out);
+bool hasTrackPlan(const String& name);
 // Título ("name" dentro del JSON) de una maqueta guardada.
 String title(const String& name);
 // Graba las maquetas de ejemplo la primera vez que arranca el equipo.

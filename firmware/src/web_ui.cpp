@@ -500,6 +500,7 @@ void handleLayoutList() {
     o["name"] = n;
     o["title"] = layouts::title(n);
     o["active"] = config.layout == n.c_str();
+    o["gbs"] = layouts::hasTrackPlan(n);
   }
   sendJson(doc);
 }
@@ -516,6 +517,11 @@ void handleLayoutSave() {
   if (!layouts::write(name, body(), &err)) return sendError(err);
   if (config.layout == name.c_str()) activateLayout(config.layout);
   sendOk("layout saved");
+}
+
+void handleLayoutTrackPlan() {
+  if (!layouts::writeTrackPlan(server.arg("name"), body())) return sendError("could not save the track plan");
+  sendOk("track plan saved");
 }
 
 void handleLayoutDelete() {
@@ -775,6 +781,7 @@ void webSetup() {
   server.on("/api/layout", HTTP_GET, handleLayoutGet);
   server.on("/api/layout", HTTP_POST, handleLayoutSave);
   server.on("/api/layout/delete", HTTP_POST, handleLayoutDelete);
+  server.on("/api/layout/gbs", HTTP_POST, handleLayoutTrackPlan);
   server.on("/api/layout/activate", HTTP_POST, handleLayoutActivate);
   server.onNotFound(handleNotFound);
   server.begin();
