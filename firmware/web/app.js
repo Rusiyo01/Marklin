@@ -120,7 +120,9 @@ function renderInfo(){
     [t('Ports'),'TCP 15731 · UDP 15731/15730'],
     [t('App traffic'),t('{0} commands · {1} lists sent',n.frames||0,n.files||0)]]
     .map(([k,v])=>`<span>${k}</span><span>${esc(v)}</span>`).join('');
-  const help=t('The ESP32 presents itself on the network as a Central Station. On the iPad: join the WiFi <b>{0}</b> (or your home WiFi, if the ESP32 is on it), open RailControl Pro, choose <b>Central Station</b> and type the IP <b>{1}</b>. The app receives the inventory locos and the turnouts of the active layout.',esc(w.apSsid),esc(w.apIp));
+  const help=w.connected
+    ?t('The ESP32 presents itself on the network as a Central Station. On the iPad, on your home WiFi: open RailControl Pro, choose <b>Central Station</b> and type the IP <b>{0}</b>. On the WiFi <b>{1}</b> use <b>{2}</b> instead. The app receives the inventory locos and the turnouts of the active layout.',esc(w.ip),esc(w.apSsid),esc(w.apIp))
+    :t('The ESP32 presents itself on the network as a Central Station. On the iPad: join the WiFi <b>{0}</b> (or your home WiFi, if the ESP32 is on it), open RailControl Pro, choose <b>Central Station</b> and type the IP <b>{1}</b>. The app receives the inventory locos and the turnouts of the active layout.',esc(w.apSsid),esc(w.apIp));
   if($('#lanHelp').innerHTML!==help)$('#lanHelp').innerHTML=help;
   $('#devices').innerHTML=state.devices.map(d=>`<tr><td>${esc(tr(d.type))}</td><td>${d.uid}</td><td>v${d.version}</td></tr>`).join('')
     ||'<tr><td class="dir">'+t('None (press "Find devices")')+'</td></tr>';
