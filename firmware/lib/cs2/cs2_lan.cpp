@@ -304,10 +304,13 @@ bool Gateway::handleClientFrame(const CanFrame& f, const std::function<void(Mode
   const uint8_t cmd = marklin::commandOf(f);
   const bool response = marklin::isResponse(f);
 
-  if (cmd == marklin::CMD_PING && !response) {
+  if (cmd == marklin::CMD_PING) {
     // Somos la central: contestamos y dejamos que el ping llegue también a
-    // la Gleisbox, la MS2, etc. para que la app los vea.
-    replies->push_back(pingReply());
+    // la Gleisbox, la MS2, etc. para que la app los vea. Muchas apps no
+    // mandan una petición de ping sino que se anuncian con su propia
+    // respuesta (tipo 0xEEEE, "CS2 software") y esperan a que la central
+    // conteste: también les respondemos.
+    if (!response || (f.dlc >= 4 && marklin::readBe32(f.data) != uid_)) replies->push_back(pingReply());
     return true;
   }
 

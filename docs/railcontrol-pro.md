@@ -81,7 +81,10 @@ apps hay conectadas y cuántas órdenes han mandado. En **Monitor** verás las
   Las búsquedas automáticas (un *ping* por difusión) también se contestan.
 - **Ping**: el ESP32 responde como Central Station (tipo de equipo `0xFFFF`,
   versión 4.2) y deja pasar el ping al bus para que la app vea también la
-  Gleisbox y la MS2.
+  Gleisbox y la MS2. También contesta a las apps que, en vez de preguntar,
+  se anuncian con su propia respuesta de ping (tipo `0xEEEE`, "CS2
+  software"), y cada 5 s difunde su respuesta de ping al puerto UDP 15730
+  para las apps con búsqueda automática.
 - **Ficheros de configuración** (orden CAN `0x20`/`0x21`): `loks` →
   `lokomotive.cs2`, `mags` → `magnetartikel.cs2`, `gbs` → `gleisbild.cs2`,
   `gbs-0` → página del plano, `fs` → `fahrstrassen.cs2`, y los de estado

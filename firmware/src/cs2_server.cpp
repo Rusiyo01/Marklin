@@ -17,6 +17,9 @@ namespace {
 constexpr int kMaxClients = 4;
 constexpr int kMaxPeers = 4;
 constexpr uint32_t kPeerTimeoutMs = 120000;
+// Cada cuánto se anuncia la central por difusión UDP (como la CS2, que
+// difunde su tráfico al puerto 15730) para las apps con búsqueda automática.
+constexpr uint32_t kAnnounceMs = 5000;
 
 struct Client {
   WiFiClient sock;
@@ -41,6 +44,7 @@ bool started = false;
 int sourceClient = -1;
 int sourcePeer = -1;
 uint32_t fromApps = 0;
+uint32_t lastAnnounceMs = 0;
 
 // ---- Datos que se entregan a la app ------------------------------------------
 
@@ -227,6 +231,14 @@ void pollUdp() {
   }
 }
 
+void announce(uint32_t now) {
+  if (now - lastAnnounceMs < kAnnounceMs) return;
+  lastAnnounceMs = now;
+  const marklin::CanFrame f = gateway.pingReply();
+  sendUdp(WiFi.softAPBroadcastIP(), cs2::kUdpReplyPort, f);
+  if (WiFi.status() == WL_CONNECTED) sendUdp(WiFi.broadcastIP(), cs2::kUdpReplyPort, f);
+}
+
 }  // namespace
 
 void setup() {
@@ -244,6 +256,7 @@ void loop() {
   acceptClients();
   pollClients();
   pollUdp();
+  announce(millis());
 }
 
 void onBusFrame(const marklin::CanFrame& f, bool) { broadcast(f); }
