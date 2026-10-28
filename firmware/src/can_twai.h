@@ -12,7 +12,8 @@ class TwaiBus : public marklin::CanSink {
   bool send(const marklin::CanFrame& frame) override;
   // Lectura no bloqueante. Ignora tramas estándar (11 bits) y RTR.
   bool receive(marklin::CanFrame* frame);
-  // Vigila el estado del controlador y se recupera de "bus-off".
+  // Vigila el estado del controlador y se recupera de "bus-off"
+  // (reinstalándolo cada kReinstallDelayMs mientras siga el problema).
   void poll(uint32_t nowMs);
 
   bool started() const { return started_; }
@@ -25,7 +26,13 @@ class TwaiBus : public marklin::CanSink {
   uint32_t rxErrorCounter() const { return rxErrorCounter_; }
 
  private:
+  static constexpr uint32_t kReinstallDelayMs = 2000;
+  bool install();
+
+  int txPin_ = -1;
+  int rxPin_ = -1;
   bool started_ = false;
+  uint32_t reinstallAtMs_ = 0;
   uint8_t state_ = 0;
   uint32_t busErrors_ = 0;
   uint32_t recoveries_ = 0;
