@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "marklin_controller.h"
+
 namespace cs2 {
 
 using marklin::CanFrame;
@@ -377,6 +379,50 @@ bool Gateway::handleClientFrame(const CanFrame& f, const std::function<void(Mode
   }
 
   return true;
+}
+
+bool emulateTrackResponse(const CanFrame& req, const marklin::Controller& c, uint16_t hash, CanFrame* out) {
+  using namespace marklin;
+  if (isResponse(req)) return false;
+  const uint8_t cmd = commandOf(req);
+  *out = req;
+  out->id = makeId(cmd, true, hash);
+  const LocoState* l = req.dlc >= 4 ? c.findLoco(readBe32(req.data)) : nullptr;
+  switch (cmd) {
+    case CMD_SYSTEM:
+      if (req.dlc == 4) {  // consulta de estado: 1 = vía con corriente
+        out->dlc = 5;
+        out->data[4] = c.power() == PowerState::On ? 1 : 0;
+        return true;
+      }
+      return req.dlc >= 5 && (req.data[4] == SYS_STOP || req.data[4] == SYS_GO || req.data[4] == SYS_HALT ||
+                              req.data[4] == SYS_LOCO_EMERGENCY);
+    case CMD_LOCO_SPEED:
+      if (req.dlc == 4) {
+        out->dlc = 6;
+        writeBe16(out->data + 4, l ? l->speed : 0);
+        return true;
+      }
+      return req.dlc == 6;
+    case CMD_LOCO_DIRECTION:
+      if (req.dlc == 4) {
+        out->dlc = 5;
+        out->data[4] = l ? l->direction : 0;
+        return true;
+      }
+      return req.dlc == 5;
+    case CMD_LOCO_FUNCTION:
+      if (req.dlc == 5) {
+        out->dlc = 6;
+        out->data[5] = l && req.data[4] < 32 ? (l->functions >> req.data[4]) & 1 : 0;
+        return true;
+      }
+      return req.dlc >= 6;
+    case CMD_ACCESSORY:
+      return req.dlc >= 6;
+    default:
+      return false;
+  }
 }
 
 CanFrame s88Event(uint16_t hash, uint32_t id, bool active) {

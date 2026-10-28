@@ -2,6 +2,7 @@
 
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <string.h>
 
 #include <vector>
 
@@ -137,6 +138,13 @@ void logRequest(const marklin::CanFrame& f) {
 }
 
 // Procesa una trama de una app; las respuestas propias van en `replies`.
+bool trackBoxAnswers() {
+  if (strcmp(canBus.stateName(), "ok") != 0) return false;
+  for (int i = 0; i < controller.deviceCount(); i++)
+    if ((controller.device(i).type & 0xFFFE) == 0x0010) return true;  // Gleisbox / GFP
+  return false;
+}
+
 void fromApp(const marklin::CanFrame& f, int client, int peer, std::vector<marklin::CanFrame>* replies) {
   fromApps++;
   const bool forward = gateway.handleClientFrame(f, fillModel, replies);
@@ -150,6 +158,11 @@ void fromApp(const marklin::CanFrame& f, int client, int peer, std::vector<markl
   controller.handleFrame(f);
   sourceClient = -1;
   sourcePeer = -1;
+  // Sin Gleisbox en el bus nadie confirma las órdenes y las apps se
+  // reconectan: contesta el ESP32, como el módulo de vía de una CS2.
+  marklin::CanFrame r;
+  if (!trackBoxAnswers() && cs2::emulateTrackResponse(f, controller, controller.hash(), &r))
+    controller.handleFrame(r);
 }
 
 void acceptClients() {

@@ -87,10 +87,10 @@ const char* TwaiBus::stateName() const {
   if (reinstallAtMs_) return "bus-off";
   if (!started_) return "not started";
   switch (state_) {
-    case TWAI_STATE_STOPPED: return "parado";
+    case TWAI_STATE_STOPPED: return "stopped";
     case TWAI_STATE_RUNNING: return "ok";
     case TWAI_STATE_BUS_OFF: return "bus-off";
-    case TWAI_STATE_RECOVERING: return "recuperando";
+    case TWAI_STATE_RECOVERING: return "recovering";
     default: return "?";
   }
 }

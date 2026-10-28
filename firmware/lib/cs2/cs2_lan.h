@@ -23,6 +23,10 @@
 
 #include "marklin_can.h"
 
+namespace marklin {
+class Controller;
+}
+
 namespace cs2 {
 
 constexpr uint16_t kTcpPort = 15731;
@@ -120,6 +124,12 @@ class Gateway {
   uint16_t hash_ = 0;
   uint32_t configRequests_ = 0;
 };
+
+// Respuesta que daría el módulo de vía de la central a una orden de una app
+// (estado y STOP/GO, velocidad, sentido, funciones, accesorios), con el estado
+// del controlador. Se usa cuando no hay Gleisbox que conteste en el bus.
+bool emulateTrackResponse(const marklin::CanFrame& req, const marklin::Controller& c, uint16_t hash,
+                          marklin::CanFrame* out);
 
 // Evento de contacto S88 (como los de un Link S88) para avisar a las apps de
 // un sensor local del ESP32. id = módulo * 1000 + contacto.

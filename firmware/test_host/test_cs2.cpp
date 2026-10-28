@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "cs2_lan.h"
+#include "marklin_controller.h"
 #include "minitest.h"
 
 using namespace marklin;
@@ -220,4 +221,26 @@ TEST(cs2_prefs_con_ip_y_uid) {
   CHECK(f.compare(0, 14, "[Preferences]\n") == 0);
   CHECK(f.find(" ..key=IpAdresse\n ..value=192.168.4.1\n") != std::string::npos);
   CHECK(f.find(" ..key=GfpUid\n ..value=1129525832\n") != std::string::npos);
+}
+
+TEST(cs2_responde_por_la_gleisbox) {
+  struct Sink : CanSink {
+    bool send(const CanFrame&) override { return true; }
+  } sink;
+  Controller c(&sink);
+  CanFrame r;
+  // Consulta de estado sin corriente y después de un GO.
+  CHECK(cs2::emulateTrackResponse(buildPowerQuery(0x4711), c, 0x1234, &r));
+  CHECK(r.id == makeId(CMD_SYSTEM, true, 0x1234) && r.dlc == 5 && r.data[4] == 0);
+  c.handleFrame(buildGo(0x4711));
+  CHECK(cs2::emulateTrackResponse(buildPowerQuery(0x4711), c, 0x1234, &r) && r.data[4] == 1);
+  CHECK(cs2::emulateTrackResponse(buildGo(0x4711), c, 0x1234, &r) && r.dlc == 5 && r.data[4] == SYS_GO);
+  // Velocidad: orden (eco) y consulta.
+  const uint32_t loco = locoUid(Protocol::MM2, 24);
+  c.handleFrame(buildSpeed(0x4711, loco, 300));
+  CHECK(cs2::emulateTrackResponse(buildSpeed(0x4711, loco, 300), c, 0x1234, &r) && isResponse(r) && r.dlc == 6);
+  CHECK(cs2::emulateTrackResponse(buildSpeedQuery(0x4711, loco), c, 0x1234, &r) && r.dlc == 6 && readBe16(r.data + 4) == 300);
+  // Las respuestas y los pings no se contestan.
+  CHECK(!cs2::emulateTrackResponse(r, c, 0x1234, &r));
+  CHECK(!cs2::emulateTrackResponse(buildPing(0x4711), c, 0x1234, &r));
 }
