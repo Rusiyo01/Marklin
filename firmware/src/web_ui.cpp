@@ -711,6 +711,11 @@ void handleNotFound() {
       host != String(config.hostname.c_str()) + ".local") {
     return redirectToApp();
   }
+  // Para diagnosticar apps (p.ej. RailControl Pro) que piden algo que no existe.
+  if (server.uri() != "/favicon.ico")
+    eventLog.addf(LogKind::Info, "HTTP: unknown request %s %s from %s",
+                  server.method() == HTTP_GET ? "GET" : "POST/other", server.uri().c_str(),
+                  server.client().remoteIP().toString().c_str());
   server.send(404, "text/plain", "not found");
 }
 

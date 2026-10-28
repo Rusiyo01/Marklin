@@ -199,6 +199,7 @@ int touchPeer(const IPAddress& ip) {
     if (peers[i].lastMs < peers[oldest].lastMs) oldest = i;
   }
   const int slot = freeSlot >= 0 ? freeSlot : oldest;
+  eventLog.addf(LogKind::Info, "CS2 network: UDP data from %s", ip.toString().c_str());
   peers[slot].ip = ip;
   peers[slot].lastMs = now;
   peers[slot].used = true;
